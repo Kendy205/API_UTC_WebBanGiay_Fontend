@@ -1,76 +1,91 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { cartService } from '../../services/CartService'
-import { addToCart } from '../slices/cartSlice'
 
 /**
- * addToCartThunk
- *
- * Flow:
- *  1. Kiểm tra isAuthenticated (authSlice) → nếu chưa login thì reject
- *  2. Dispatch addToCart → lưu localStorage ngay (UX nhanh)
- *  3. Gọi API POST /api/Cart/items để đồng bộ lên server
- *     → Nếu API lỗi: chỉ log warning, KHÔNG rollback localStorage
- *       (giỏ hàng vẫn còn, user không mất data)
+ * Lấy danh sách giỏ hàng
+ */
+export const fetchCartThunk = createAsyncThunk(
+    'cart/fetchCartThunk',
+    async (_, { rejectWithValue }) => {
+        try {
+            const res = await cartService.getMyCart()
+            const body = res?.data ?? res
+            const items = body?.data?.items ?? body ?? []
+            return Array.isArray(items) ? items : []
+        } catch (error) {
+            return rejectWithValue(error?.response?.data?.message ?? error.message)
+        }
+    }
+)
+
+/**
+ * Thêm sản phẩm vào giỏ hàng
  */
 export const addToCartThunk = createAsyncThunk(
     'cart/addToCartThunk',
-    async (product, { getState, dispatch, rejectWithValue }) => {
-        const { isAuthenticated } = getState().auth
-
-        // ── Chưa đăng nhập ──────────────────────────────────────────────
-        if (!isAuthenticated) {
-            return rejectWithValue('Vui lòng đăng nhập để thêm vào giỏ hàng')
-        }
-
-        // ── Lưu localStorage ngay (optimistic update) ────────────────────
-        dispatch(addToCart(product))
-
-        // ── Đồng bộ lên server (best-effort, không block UX) ─────────────
+    async (product, { dispatch, rejectWithValue }) => {
         try {
-            await cartService.addItem({
+            const res = await cartService.addItem({
                 variantId: product.variantId,
-                quantity: 1,
+                quantity: product.quantity ?? 1,
             })
-        } catch (e) {
-            // Backend chưa có / lỗi tạm thời → warning, không throw
-            console.warn('[CartSync] Không sync được lên server:', e?.response?.data?.message ?? e.message)
+            // API trả về giỏ hàng mới sau khi thêm
+            return res.data?.data?.items ?? []
+        } catch (error) {
+            return rejectWithValue(error?.response?.data?.message ?? error.message)
         }
     }
 )
 
 /**
- * syncCartOnLoginThunk
- *
- * Gọi sau khi user đăng nhập thành công:
- * Lấy toàn bộ items đang trong localStorage → gửi batch lên server.
- * Dùng trong authAction hoặc component sau khi login fulfilled.
+ * Cập nhật số lượng sản phẩm
  */
-export const syncCartOnLoginThunk = createAsyncThunk(
-    'cart/syncCartOnLogin',
-    async (_, { getState }) => {
-        const items = getState().cart.items
-        if (!items.length) return
-
-        const payload = items.map((item) => ({
-            variantId: item.variantId,
-            quantity: item.quantity,
-        }))
-
+export const updateItemQuantityThunk = createAsyncThunk(
+    'cart/updateItemQuantityThunk',
+    async ({ cartItemId, quantity }, { dispatch, rejectWithValue }) => {
         try {
-            await cartService.syncCart(payload)
-        } catch (e) {
-            console.warn('[CartSync] Sync khi login thất bại:', e?.response?.data?.message ?? e.message)
+            const res = await cartService.updateItem(cartItemId, quantity)
+            // Trả về trực tiếp mảng items mới
+            return res.data?.data?.items ?? []
+        } catch (error) {
+            return rejectWithValue(error?.response?.data?.message ?? error.message)
         }
     }
 )
 
-// Re-export các action đồng bộ từ slice để dùng trực tiếp khi cần
-export {
-    addToCart,
-    removeFromCart,
-    setQuantity,
-    decrement,
-    increment,
-    clearCart,
-    hydrateCart,
-} from '../slices/cartSlice'
+/**
+ * Xoá một sản phẩm khỏi giỏ hàng
+ */
+export const removeItemThunk = createAsyncThunk(
+    'cart/removeItemThunk',
+    async (variantId, { dispatch, rejectWithValue }) => {
+        try {
+            const res = await cartService.removeItem(variantId)
+            // Trả về trực tiếp mảng items mới
+            return res.data?.data?.items ?? []
+        } catch (error) {
+            return rejectWithValue(error?.response?.data?.message ?? error.message)
+        }
+    }
+)
+
+/**
+ * Xoá toàn bộ giỏ hàng
+ * (Ghi chú: Nếu backend chưa có api xóa toàn bộ, ta gọi remove từng item)
+ */
+export const clearCartThunk = createAsyncThunk(
+    'cart/clearCartThunk',
+    async (_, { getState, dispatch, rejectWithValue }) => {
+        try {
+            const items = getState().cart.items || []
+            // Chạy song song tất cả các request xóa
+            await Promise.all(
+                items.map((item) => cartService.removeItem(item.variantId))
+            )
+            // Xóa tất cả nên trả về mảng rỗng
+            return []
+        } catch (error) {
+            return rejectWithValue(error?.response?.data?.message ?? error.message)
+        }
+    }
+)

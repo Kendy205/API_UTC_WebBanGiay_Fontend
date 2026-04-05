@@ -1,15 +1,27 @@
 import { useEffect, useState } from 'react'
-import { useLocation, useParams } from 'react-router-dom'
-import { productService } from '../../services/ProductService'
+import { useParams } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import { getProductById } from '../../redux/actions/ProductAction'
 import Skeleton from '../loading/Skeleton'
 import VariantSelector from './VariantSelector'
 
+/**
+ * ProductDetail
+ * Gọi API getProductById để lấy toàn bộ thông tin sản phẩm + variants.
+ * API response shape:
+ *   data.data = {
+ *     productId, productName, slug, description,
+ *     basePrice, salePrice, image,
+ *     categoryName, brandName,
+ *     variants: [{ variantId, sku, priceOverride, stockQuantity, isActive,
+ *                  sizeLabel, sizeSystem, colorName, productName }]
+ *   }
+ */
 export default function ProductDetail() {
     const { productId } = useParams()
-    const location = useLocation()
-    const baseProduct = location.state?.product
-    console.log(baseProduct)
-    const [variants, setVariants] = useState([])
+    const dispatch = useDispatch()
+
+    const [product, setProduct] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
@@ -19,29 +31,22 @@ export default function ProductDetail() {
             try {
                 setLoading(true)
                 setError(null)
-                const res = await productService.getProductVariants(productId)
-                const body = res.data
-                const data = Array.isArray(body?.data) ? body.data : []
-                if (!ignore) setVariants(data)
+                const res = await dispatch(getProductById(productId))
+                // res.payload = response.data từ ProductAction (= { success, statusCode, data })
+                const body = res?.payload ?? res?.data
+                const data = body?.data ?? body
+                if (!ignore) setProduct(data ?? null)
             } catch (e) {
-                if (!ignore) {
-                    setError(e.message ?? 'Không tải được biến thể sản phẩm')
-                }
+                if (!ignore) setError(e.message ?? 'Không tải được sản phẩm')
             } finally {
                 if (!ignore) setLoading(false)
             }
         }
         load()
-        return () => {
-            ignore = true
-        }
+        return () => { ignore = true }
     }, [productId])
 
-    const title =
-        baseProduct?.productName ??
-        baseProduct?.name ??
-        `Sản phẩm #${productId}`
-
+    /* ── Loading ── */
     if (loading) {
         return (
             <div className="space-y-3">
@@ -52,6 +57,7 @@ export default function ProductDetail() {
         )
     }
 
+    /* ── Error ── */
     if (error) {
         return (
             <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -60,39 +66,104 @@ export default function ProductDetail() {
         )
     }
 
+    /* ── Không có dữ liệu ── */
+    if (!product) {
+        return (
+            <p className="rounded border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-500">
+                Không tìm thấy sản phẩm.
+            </p>
+        )
+    }
+
+    const {
+        productName,
+        productId: pid,
+        slug,
+        description,
+        basePrice,
+        salePrice,
+        image,
+        brandName,
+        categoryName,
+        variants = [],
+    } = product
+
+    /* ── Format tiền ── */
+    const formatPrice = (amount) =>
+        amount != null
+            ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
+            : null
+
+    const displayPrice = salePrice ?? basePrice
+    const hasDiscount = salePrice != null && basePrice != null && salePrice < basePrice
+
     return (
         <div className="rounded-lg border bg-white p-6 shadow-sm">
-            {/* ── Header sản phẩm ── */}
+
+            {/* ── Ảnh sản phẩm ── */}
+            <img
+                src={image ?? 'https://placehold.co/800x600?text=No+Image'}
+                alt={productName}
+                className="mb-5 w-full rounded-lg object-cover bg-neutral-100"
+                style={{ maxHeight: 360 }}
+            />
+
+            {/* ── Header ── */}
             <div className="mb-1 flex items-start justify-between gap-3">
                 <h1 className="text-xl font-semibold text-neutral-900">
-                    {title}
+                    {productName ?? `Sản phẩm #${productId}`}
                 </h1>
-                {baseProduct?.productId && (
+                {pid != null && (
                     <span className="shrink-0 rounded bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600">
-                        #{baseProduct.productId}
+                        #{pid}
                     </span>
                 )}
             </div>
 
-            {/* Meta: hãng & danh mục */}
-            {(baseProduct?.brandName || baseProduct?.categoryName) && (
-                <p className="mb-5 text-sm text-neutral-500">
-                    {baseProduct.brandName && (
-                        <span>Hãng: {baseProduct.brandName}</span>
+            {/* Slug */}
+            {slug && (
+                <p className="mb-2 text-xs text-neutral-400">/{slug}</p>
+            )}
+
+            {/* ── Meta: hãng & danh mục ── */}
+            {(brandName || categoryName) && (
+                <p className="mb-3 text-sm text-neutral-500">
+                    {brandName && <span>Hãng: <span className="font-medium text-neutral-700">{brandName}</span></span>}
+                    {brandName && categoryName && <span className="mx-2">•</span>}
+                    {categoryName && <span>Danh mục: <span className="font-medium text-neutral-700">{categoryName}</span></span>}
+                </p>
+            )}
+
+            {/* ── Giá ── */}
+            {displayPrice != null && (
+                <div className="mb-4 flex items-baseline gap-3">
+                    <span className="text-2xl font-bold text-neutral-900">
+                        {formatPrice(displayPrice)}
+                    </span>
+                    {hasDiscount && (
+                        <>
+                            <span className="text-sm text-neutral-400 line-through">
+                                {formatPrice(basePrice)}
+                            </span>
+                            <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">
+                                -{Math.round((1 - salePrice / basePrice) * 100)}%
+                            </span>
+                        </>
                     )}
-                    {baseProduct.brandName && baseProduct.categoryName && (
-                        <span className="mx-2">•</span>
-                    )}
-                    {baseProduct.categoryName && (
-                        <span>Danh mục: {baseProduct.categoryName}</span>
-                    )}
+                </div>
+            )}
+
+            {/* ── Mô tả ── */}
+            {description && (
+                <p className="mb-5 text-sm leading-relaxed text-neutral-600">
+                    {description}
                 </p>
             )}
 
             <hr className="mb-5 border-neutral-200" />
 
             {/* ── Chọn biến thể ── */}
-            <VariantSelector variants={variants} baseProduct={baseProduct} />
+            <VariantSelector variants={variants} baseProduct={product} />
         </div>
     )
 }

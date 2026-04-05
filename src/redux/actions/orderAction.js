@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { orderService } from '../../services/OrderService'
-import { clearCart } from '../slices/cartSlice'
+import { fetchCartThunk } from './cartAction'
 
 /**
  * fetchAddressesThunk
@@ -35,8 +35,8 @@ export const createOrderThunk = createAsyncThunk(
     async (orderData, { dispatch, rejectWithValue }) => {
         try {
             const response = await orderService.createOrder(orderData)
-            // Xóa giỏ hàng sau khi đặt hàng thành công
-            dispatch(clearCart())
+            // Cập nhật lại giỏ hàng từ server (expected: trống)
+            dispatch(fetchCartThunk())
             return response.data?.data ?? response.data
         } catch (error) {
             const msg =

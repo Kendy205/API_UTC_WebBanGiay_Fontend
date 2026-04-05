@@ -16,7 +16,7 @@ export const getProducts = createAsyncThunk(
     }
 )
 export const getProductById = createAsyncThunk(
-    'products/getProductById',
+    'product',
     async (productId, { rejectWithValue }) => {
         try {
             const response = await productService.getProductById(productId);
@@ -27,3 +27,5 @@ export const getProductById = createAsyncThunk(
         }
     }
 )
+
+   

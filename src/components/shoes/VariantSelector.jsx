@@ -13,7 +13,7 @@ export default function VariantSelector({ variants = [], baseProduct = {} }) {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const isAuthenticated = useSelector((s) => s.auth.isAuthenticated)
-    console.log(variants)
+    //console.log(variants)
     // --- Tập hợp màu duy nhất ---
     const colors = useMemo(() => {
         const seen = new Set()
@@ -199,7 +199,7 @@ export default function VariantSelector({ variants = [], baseProduct = {} }) {
                         Size
                         {selectedVariant && (
                             <span className="ml-2 font-semibold text-neutral-900">
-                                — {selectedVariant.sizeName}
+                                — {selectedVariant.sizeLabel}
                             </span>
                         )}
                     </p>
@@ -229,7 +229,10 @@ export default function VariantSelector({ variants = [], baseProduct = {} }) {
                                                 : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-500'
                                         }`}
                                 >
-                                    {v.sizeName}
+                                    {v.sizeLabel}
+                                    {v.sizeSystem && (
+                                        <span className="ml-1 text-xs opacity-60">{v.sizeSystem}</span>
+                                    )}
                                 </button>
                             )
                         })}

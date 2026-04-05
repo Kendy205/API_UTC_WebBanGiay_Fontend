@@ -13,9 +13,9 @@ export class ProductService extends BaseServices
     getProductById = (productId) => {
         return this.get(`api/Product/${productId}`);
     } 
-    getProductVariants = (productId) => {
-        return this.get(`api/ProductVariant/${productId}`);
-    }   
+    // getProductVariants = (productId) => {
+    //     return this.get(`api/ProductDetail/${productId}`);
+    // }   
     
 }
 export const productService = new ProductService()

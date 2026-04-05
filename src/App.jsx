@@ -27,22 +27,22 @@ function App() {
                     <Route path="" element={<UserTemplate />}>
                         <Route path="/" element={<HomePage />} />
                         <Route path="/home" element={<HomePage />} />
-                        <Route path="/products" element={<ProductList />} />
+                        {/* <Route path="/products" element={<ProductList />} /> */}
                         <Route path="/products/:productId" element={<ProductDetail />} />
-
+                        {/* Auth: USER */}
+                        <Route
+                            element={
+                                <ProtectedRoute
+                                    allowedRoles={['USER', 'CUSTOMER']}
+                                />
+                            }
+                        >
+                            <Route path="/cart" element={<CartPage />} />
+                            <Route path="/order" element={<OrderPage />} />
+                        </Route>
                     </Route>
 
-                    {/* Auth: USER */}
-                    <Route
-                        element={
-                            <ProtectedRoute
-                                allowedRoles={['USER', 'CUSTOMER']}
-                            />
-                        }
-                    >
-                        <Route path="/cart" element={<CartPage />} />
-                        <Route path="/order" element={<OrderPage />} />
-                    </Route>
+
                     {/* Auth: ADMIN */}
                     <Route
                         element={
@@ -55,6 +55,7 @@ function App() {
                             <Route index element={<AdminDashboardPage />} />
                         </Route>
                     </Route>
+
 
                 </Routes>
             </Provider>

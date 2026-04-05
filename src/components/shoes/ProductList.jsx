@@ -6,8 +6,8 @@ import Skeleton from '../loading/Skeleton';
 export default function ProductList() {
     const { products, error } = useSelector((state) => state.product)
     const isApiLoading = useSelector((state) => state.ui.loadingCount > 0)
-    console.log(isApiLoading)
-   
+    //console.log(isApiLoading)
+
     const dispatch = useDispatch();
     const [page, setPage] = useState(1)
     const pageSize = 8
@@ -87,8 +87,8 @@ export default function ProductList() {
                             type="button"
                             onClick={() => goToPage(p)}
                             className={`rounded px-3 py-1.5 text-sm font-medium ${active
-                                    ? 'bg-neutral-900 text-white'
-                                    : 'border border-neutral-300 bg-white text-neutral-900'
+                                ? 'bg-neutral-900 text-white'
+                                : 'border border-neutral-300 bg-white text-neutral-900'
                                 }`
                             }
                         >

@@ -4,6 +4,9 @@ import { logout } from '../redux/slices/authSlice'
 import { ROLE_ADMIN } from '../utils/constants/System'
 import LoadingLink from '../components/loading/LoadingLink'
 import { navigateWithRouteLoading } from '../utils/route/navigateWithRouteLoading'
+import { fetchCartThunk } from '../redux/actions/cartAction'
+import { useEffect } from 'react'
+import { clearCartLocal } from '../redux/slices/cartSlice'
 
 function normalizeRole(r) {
     if (r == null) return null
@@ -20,7 +23,14 @@ export default function UserTemplate() {
     const r = normalizeRole(role)
     const canAdmin = isAuthenticated && (r === ROLE_ADMIN || r === 'ADMINISTRATOR')
 
+    useEffect(() => {
+        if (isAuthenticated) {
+            dispatch(fetchCartThunk())
+        }
+    }, [isAuthenticated, dispatch])
+
     const onLogout = () => {
+        dispatch(clearCartLocal())
         dispatch(logout())
         navigateWithRouteLoading({
             dispatch,

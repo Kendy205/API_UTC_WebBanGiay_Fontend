@@ -182,13 +182,13 @@ http.interceptors.response.use(
 )
 
 export class BaseServices {
-    get = (ur) => http.get(ur)
+    get = (ur, config = {}) => http.get(ur, config)
 
-    post = (ur, model) => http.post(ur, model)
+    post = (ur, model, config = {}) => http.post(ur, model, config)
 
-    put = (ur, model) => http.put(ur, model)
+    put = (ur, model, config = {}) => http.put(ur, model, config)
 
-    delete = (ur) => http.delete(ur)
+    delete = (ur, config = {}) => http.delete(ur, config)
 }
 
 export const baseServices = new BaseServices()

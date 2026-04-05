@@ -25,20 +25,6 @@ export const productSlice = createSlice({
                 state.error = action.payload || 'Không tải được danh sách sản phẩm'
             }
             )
-            .addCase(getProductById.pending, (state) => {
-                state.error = null;
-            }
-            )
-            .addCase(getProductById.fulfilled, (state, action) => {
-                state.products = action.payload.data;
-                //console.log('Danh sách sản phẩm đã được cập nhật:', state.products)
-            }
-            )
-            .addCase(getProductById.rejected, (state, action) => {
-                state.error = action.payload || 'Không tải được danh sách sản phẩm'
-            }
-            )   
-
     }
 })
 
