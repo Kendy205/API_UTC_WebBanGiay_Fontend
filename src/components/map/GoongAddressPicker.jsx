@@ -2,16 +2,14 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import Map, { Marker } from 'react-map-gl/maplibre';
 import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css'; // BẮT BUỘC PHẢI CÓ DÒNG NÀY ĐỂ BẢN ĐỒ KHÔNG BỊ VỠ VỤN
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 const GoongAddressPicker = ({ onAddressSelected }) => {
-    // 1. Lấy Key từ file .env (Giữ nguyên như cũ)
     const TILES_KEY = import.meta.env.VITE_GOONG_TILES_KEY;
     const API_KEY = import.meta.env.VITE_GOONG_API_KEY;
 
-    // 2. State quản lý
     const [viewState, setViewState] = useState({
-        longitude: 105.8542, // Mặc định Hà Nội
+        longitude: 105.8542,
         latitude: 21.0285,
         zoom: 14
     });

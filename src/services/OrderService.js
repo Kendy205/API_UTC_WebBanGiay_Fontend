@@ -9,10 +9,15 @@ export class OrderService extends BaseServices {
 
     /**
      * Tạo đơn hàng mới.
-     * POST /api/Order
-     * body: { addressId, paymentMethod, items: [{ variantId, quantity }] }
+     * POST /api/Order/checkout
      */
-    createOrder = (body) => this.post('api/Order', body)
+    createOrder = (body) => this.post('api/Order/checkout', body)
+
+    /**
+     * Lấy danh sách lịch sử đơn hàng
+     * GET /api/Order
+     */
+    getMyOrders = () => this.get('api/Order')
 }
 
 export const orderService = new OrderService()

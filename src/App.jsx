@@ -11,9 +11,10 @@ import ProductList from './components/shoes/ProductList'
 import CartPage from './pages/cart/CartPage'
 import ProductDetail from './components/shoes/ProductDetail'
 import OrderPage from './pages/order/OrderPage'
+import OrderHistoryPage from './pages/order/OrderHistoryPage'
 import { Provider } from 'react-redux'
 import { store } from './redux/store'
-import GoongAddressPicker from './components/map/GoongAddressPicker'
+
 function App() {
     return (
         <>
@@ -39,6 +40,7 @@ function App() {
                         >
                             <Route path="/cart" element={<CartPage />} />
                             <Route path="/order" element={<OrderPage />} />
+                            <Route path="/order-history" element={<OrderHistoryPage />} />
                         </Route>
                     </Route>
 

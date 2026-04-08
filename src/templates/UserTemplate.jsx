@@ -70,6 +70,14 @@ export default function UserTemplate() {
                             Giỏ hàng
                             {cartCount > 0 ? ` (${cartCount})` : ''}
                         </LoadingLink>
+                        {isAuthenticated && (
+                            <LoadingLink
+                                to="/order-history"
+                                className="text-sm font-medium text-neutral-700 hover:text-neutral-900"
+                            >
+                                Lịch sử đơn hàng
+                            </LoadingLink>
+                        )}
                         {canAdmin && (
                             <LoadingLink
                                 to="/admin"

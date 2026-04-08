@@ -21,6 +21,12 @@ export class CartService extends BaseServices {
     removeItem = (variantId) => this.delete(`api/Cart/items/${variantId}`, { __skipGlobalLoading: true })
 
     /**
+     * Xóa tất cả item khỏi giỏ hàng trên server.
+     * DELETE /api/Cart/items
+     */
+    clearCart = () => this.delete('api/Cart/items', { __skipGlobalLoading: true })
+
+    /** 
      * Cập nhật số lượng 1 item trên server.
      * PUT /api/Cart/items/:variantId
      * body: { quantity }

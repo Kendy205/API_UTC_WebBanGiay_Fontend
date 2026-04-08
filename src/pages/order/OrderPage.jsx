@@ -91,6 +91,8 @@ export default function OrderPage() {
         if (!isAddressReady) return
 
         const payload = {
+            userId: 0,
+            note: "",
             paymentMethod,
             items: items.map((i) => ({
                 variantId: i.variantId,
@@ -99,14 +101,22 @@ export default function OrderPage() {
         }
 
         if (addressTab === TAB_SAVED) {
-            payload.addressId = selectedAddressId
+            payload.shippingAddressId = selectedAddressId
+            payload.newAddress = null
         } else {
-            // Gửi địa chỉ thô từ bản đồ Goong
-            payload.shippingAddress = mapAddress.address
-            payload.lat = mapAddress.lat
-            payload.lng = mapAddress.lng
+            payload.shippingAddressId = 0
+            payload.newAddress = {
+                addressId: 0,
+                recipientName: "Khách hàng mới",
+                phone: "",
+                province: "",
+                district: "",
+                ward: "",
+                streetAddress: mapAddress.address,
+                isDefault: false
+            }
         }
-
+        console.log(mapAddress)
         dispatch(createOrderThunk(payload))
     }
 
@@ -148,8 +158,8 @@ export default function OrderPage() {
                                 type="button"
                                 onClick={() => setAddressTab(TAB_SAVED)}
                                 className={`flex-1 py-2 transition ${addressTab === TAB_SAVED
-                                        ? 'bg-neutral-900 text-white'
-                                        : 'bg-white text-neutral-600 hover:bg-neutral-50'
+                                    ? 'bg-neutral-900 text-white'
+                                    : 'bg-white text-neutral-600 hover:bg-neutral-50'
                                     }`}
                             >
                                 📋 Địa chỉ đã lưu
@@ -158,8 +168,8 @@ export default function OrderPage() {
                                 type="button"
                                 onClick={() => setAddressTab(TAB_MAP)}
                                 className={`flex-1 py-2 transition border-l border-neutral-200 ${addressTab === TAB_MAP
-                                        ? 'bg-neutral-900 text-white'
-                                        : 'bg-white text-neutral-600 hover:bg-neutral-50'
+                                    ? 'bg-neutral-900 text-white'
+                                    : 'bg-white text-neutral-600 hover:bg-neutral-50'
                                     }`}
                             >
                                 🗺️ Chọn trên bản đồ
@@ -208,8 +218,8 @@ export default function OrderPage() {
                                                 <label
                                                     key={addr.addressId}
                                                     className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition ${isSelected
-                                                            ? 'border-neutral-900 bg-neutral-50 ring-1 ring-neutral-900'
-                                                            : 'border-neutral-200 hover:border-neutral-400'
+                                                        ? 'border-neutral-900 bg-neutral-50 ring-1 ring-neutral-900'
+                                                        : 'border-neutral-200 hover:border-neutral-400'
                                                         }`}
                                                 >
                                                     <input
@@ -278,8 +288,8 @@ export default function OrderPage() {
                                 <label
                                     key={pm.value}
                                     className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm transition ${paymentMethod === pm.value
-                                            ? 'border-neutral-900 bg-neutral-50 font-semibold ring-1 ring-neutral-900'
-                                            : 'border-neutral-200 hover:border-neutral-400'
+                                        ? 'border-neutral-900 bg-neutral-50 font-semibold ring-1 ring-neutral-900'
+                                        : 'border-neutral-200 hover:border-neutral-400'
                                         }`}
                                 >
                                     <input

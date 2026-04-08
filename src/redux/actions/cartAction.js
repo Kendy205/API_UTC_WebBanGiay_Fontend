@@ -77,13 +77,11 @@ export const clearCartThunk = createAsyncThunk(
     'cart/clearCartThunk',
     async (_, { getState, dispatch, rejectWithValue }) => {
         try {
-            const items = getState().cart.items || []
+            //const items = getState().cart.items || []
             // Chạy song song tất cả các request xóa
-            await Promise.all(
-                items.map((item) => cartService.removeItem(item.variantId))
-            )
+            const res = await cartService.clearCart()
             // Xóa tất cả nên trả về mảng rỗng
-            return []
+            return res.data?.data?.items ?? []
         } catch (error) {
             return rejectWithValue(error?.response?.data?.message ?? error.message)
         }

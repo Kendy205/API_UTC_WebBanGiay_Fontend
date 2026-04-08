@@ -4,6 +4,67 @@ import { useDispatch } from 'react-redux'
 import { getProductById } from '../../redux/actions/ProductAction'
 import Skeleton from '../loading/Skeleton'
 import VariantSelector from './VariantSelector'
+import { reviewService } from '../../services/ReviewService'
+
+function ProductReviews({ productId }) {
+    const [reviews, setReviews] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        let ignore = false
+        const loadReviews = async () => {
+            try {
+                setLoading(true)
+                const res = await reviewService.getProductReviews(productId)
+                let data = res.data
+                if (res.data && res.data.data) {
+                    data = res.data.data
+                }
+                if (!ignore) setReviews(Array.isArray(data) ? data : [])
+            } catch (error) {
+                console.error("Lỗi lấy danh sách đánh giá", error)
+            } finally {
+                if (!ignore) setLoading(false)
+            }
+        }
+        if (productId) loadReviews()
+        return () => { ignore = true }
+    }, [productId])
+
+    if (loading) return <div className="mt-8 text-neutral-500">Đang tải đánh giá...</div>
+
+    return (
+        <div className="mt-8 pt-8 border-t border-neutral-200">
+            <h3 className="text-lg font-semibold text-neutral-900 mb-4">Đánh giá sản phẩm ({reviews.length})</h3>
+            {reviews.length === 0 ? (
+                <p className="text-sm text-neutral-500">Chưa có đánh giá nào cho sản phẩm này.</p>
+            ) : (
+                <div className="space-y-4">
+                    {reviews.map((r, idx) => (
+                        <div key={idx} className="bg-neutral-50 p-4 rounded-lg">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="flex text-yellow-400 text-sm">
+                                    {Array.from({ length: 5 }).map((_, i) => (
+                                        <span key={i}>{i < r.rating ? '★' : '☆'}</span>
+                                    ))}
+                                </div>
+                                {r.username && <span className="font-medium text-sm ml-2">{r.username}</span>}
+                                {r.createdAt && <span className="text-xs text-neutral-400 ml-auto">{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span>}
+                            </div>
+                            {(r.colorName || r.sizeLabel) && (
+                                <div className="text-xs text-neutral-500 mb-2 inline-block bg-neutral-200 px-2 py-0.5 rounded">
+                                    Phân loại: {r.colorName} {r.sizeLabel && `- Size: ${r.sizeLabel}`}
+                                </div>
+                            )}
+                            <p className="text-sm text-neutral-700">{r.reviewContent}</p>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
 
 /**
  * ProductDetail
@@ -164,6 +225,9 @@ export default function ProductDetail() {
 
             {/* ── Chọn biến thể ── */}
             <VariantSelector variants={variants} baseProduct={product} />
+
+            {/* ── Danh sách đánh giá ── */}
+            <ProductReviews productId={pid} />
         </div>
     )
 }

@@ -12,7 +12,7 @@ export default function CartList({ items }) {
     return (
         <div className="space-y-3">
             {items.map((item) => (
-                <CartItem key={item.key} item={item} />
+                <CartItem key={item.cartItemId || item.variantId} item={item} />
             ))}
         </div>
     )

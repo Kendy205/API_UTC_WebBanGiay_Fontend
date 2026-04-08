@@ -22,7 +22,14 @@ const handleActionFulfilled = (state, action) => {
     state.actionLoading = false
     state.error = null
     if (Array.isArray(action.payload)) {
-        state.items = action.payload
+        // Sort items to safely maintain order since updating might return them in different order
+        state.items = [...action.payload].sort((a, b) => {
+            const idA = a.cartItemId || a.variantId || '';
+            const idB = b.cartItemId || b.variantId || '';
+            if (idA < idB) return -1;
+            if (idA > idB) return 1;
+            return 0;
+        })
     }
 }
 const handleActionRejected = (state, action) => {
@@ -46,7 +53,14 @@ const cartSlice = createSlice({
         })
         builder.addCase(fetchCartThunk.fulfilled, (state, action) => {
             state.loading = false
-            state.items = action.payload ?? []
+            const items = action.payload ?? []
+            state.items = [...items].sort((a, b) => {
+                const idA = a.cartItemId || a.variantId || '';
+                const idB = b.cartItemId || b.variantId || '';
+                if (idA < idB) return -1;
+                if (idA > idB) return 1;
+                return 0;
+            })
             state.error = null
         })
         builder.addCase(fetchCartThunk.rejected, (state, action) => {
