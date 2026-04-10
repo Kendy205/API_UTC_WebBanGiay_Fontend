@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { fetchAddressesThunk, createOrderThunk } from '../../redux/actions/orderAction'
 import { resetOrderState } from '../../redux/slices/orderSlice'
 import GoongAddressPicker from '../../components/map/GoongAddressPicker'
+import SavedAddressTab from './SavedAddressTab'
 
 const PAYMENT_METHODS = [
     { value: 'COD', label: '💵 Thanh toán khi nhận hàng (COD)' },
@@ -24,7 +25,7 @@ export default function OrderPage() {
     const items = useSelector((s) => s.cart.items)
     const isAuthenticated = useSelector((s) => s.auth.isAuthenticated)
 
-    const { addresses, addressLoading, addressError, submitting, orderError, orderSuccess } =
+    const { addresses, addressLoading, addressError, submitting, orderError, orderSuccess, createdOrder } =
         useSelector((s) => s.order)
 
     // ── Local UI state ───────────────────────────────────────────
@@ -35,6 +36,8 @@ export default function OrderPage() {
     const [addressTab, setAddressTab] = useState(TAB_SAVED)
     // Địa chỉ được chọn từ bản đồ Goong
     const [mapAddress, setMapAddress] = useState(null) // { address, lat, lng }
+
+
 
     // ── Guards ───────────────────────────────────────────────────
     // Chỉ redirect khi chưa đăng nhập
@@ -51,8 +54,9 @@ export default function OrderPage() {
             return
         }
         // Sau lần đầu: nếu cart rỗng thì redirect
-        if (items.length === 0) { navigate('/cart') }
-    }, [items, navigate])
+        // Ngoại trừ trường hợp vừa đặt hàng thành công (cart bị xóa là đúng)
+        if (items.length === 0 && !orderSuccess) { navigate('/cart') }
+    }, [items, navigate, orderSuccess])
 
     // ── Fetch địa chỉ khi mount (chỉ khi đã auth) ───────────────
     useEffect(() => {
@@ -68,16 +72,7 @@ export default function OrderPage() {
         setSelectedAddressId(def ? def.addressId : addresses[0].addressId)
     }, [addresses])
 
-    // ── Redirect khi đặt hàng thành công ────────────────────────
-    useEffect(() => {
-        if (orderSuccess) {
-            const timer = setTimeout(() => {
-                dispatch(resetOrderState())
-                navigate('/')
-            }, 3000)
-            return () => clearTimeout(timer)
-        }
-    }, [orderSuccess, dispatch, navigate])
+    // Không tự redirect nữa — hiển thị trang thông báo thành công cho đến khi user tự điều hướng
 
     const totalQty = items.reduce((s, x) => s + (x.quantity || 0), 0)
 
@@ -107,7 +102,7 @@ export default function OrderPage() {
             payload.shippingAddressId = 0
             payload.newAddress = {
                 addressId: 0,
-                recipientName: "Khách hàng mới",
+                recipientName: "Địa chỉ mới",
                 phone: "",
                 province: "",
                 district: "",
@@ -122,20 +117,122 @@ export default function OrderPage() {
 
     /* ── Đặt hàng thành công ── */
     if (orderSuccess) {
+        const fmt = (n) => n != null
+            ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n)
+            : null
+
+        const STATUS_MAP = {
+            Pending:    { label: 'Chờ xác nhận', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+            Processing: { label: 'Đang xử lý',     color: 'bg-blue-100 text-blue-700 border-blue-200' },
+            Shipped:    { label: 'Đang giao',        color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+            Delivered:  { label: 'Đã giao',           color: 'bg-green-100 text-green-700 border-green-200' },
+            Cancelled:  { label: 'Đã hủy',           color: 'bg-red-100 text-red-700 border-red-200' },
+        }
+        const statusKey = createdOrder?.status ?? createdOrder?.orderStatus ?? 'Pending'
+        const statusInfo = STATUS_MAP[statusKey] ?? STATUS_MAP.Pending
+
+        const orderItems = createdOrder?.orderItems ?? createdOrder?.items ?? items
+        const totalAmount = createdOrder?.totalAmount ?? createdOrder?.total ?? null
+        const orderId = createdOrder?.orderId ?? createdOrder?.id ?? null
+        const method = createdOrder?.paymentMethod ?? null
+
         return (
-            <div className="mx-auto max-w-lg px-4 py-16 text-center">
-                <div className="mb-4 text-6xl">🎉</div>
-                <h1 className="mb-2 text-2xl font-bold text-neutral-900">Đặt hàng thành công!</h1>
-                <p className="mb-2 text-neutral-600">
-                    Cảm ơn bạn đã mua hàng. Chúng tôi sẽ liên hệ xác nhận đơn sớm nhất.
-                </p>
-                <p className="text-sm text-neutral-400">Tự động về trang chủ sau 3 giây…</p>
-                <button
-                    onClick={() => { dispatch(resetOrderState()); navigate('/') }}
-                    className="mt-6 rounded-xl bg-neutral-900 px-8 py-3 text-sm font-semibold text-white hover:bg-neutral-700 transition"
-                >
-                    Về trang chủ ngay
-                </button>
+            <div className="mx-auto max-w-xl px-4 py-10">
+
+                {/* ─ Header thành công ─ */}
+                <div className="mb-6 flex flex-col items-center text-center">
+                    <div className="mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-5xl shadow-sm">
+                        ✅
+                    </div>
+                    <h1 className="text-2xl font-bold text-slate-900">Đặt hàng thành công!</h1>
+                    <p className="mt-1 text-sm text-slate-500">
+                        Cảm ơn bạn đã mua hàng. Chúng tôi sẽ sớm xác nhận đơn của bạn.
+                    </p>
+                </div>
+
+                {/* ─ Thẻ thông tin đơn hàng ─ */}
+                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+
+                    {/* Mã đơn + trạng thái */}
+                    <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+                        <div>
+                            <p className="text-xs text-slate-400 mb-0.5">Mã đơn hàng</p>
+                            <p className="font-bold text-slate-800 text-lg">
+                                {orderId ? `#${orderId}` : '—'}
+                            </p>
+                        </div>
+                        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusInfo.color}`}>
+                            {statusInfo.label}
+                        </span>
+                    </div>
+
+                    {/* Phương thức thanh toán */}
+                    {method && (
+                        <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-3 text-sm">
+                            <span className="text-slate-400">💳 Thanh toán:</span>
+                            <span className="font-medium text-slate-700">{method}</span>
+                        </div>
+                    )}
+
+                    {/* Danh sách sản phẩm */}
+                    <div className="px-5 py-4">
+                        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Sản phẩm</p>
+                        <div className="space-y-3">
+                            {orderItems.map((it, idx) => (
+                                <div key={it.orderItemId ?? it.variantId ?? idx}
+                                    className="flex items-center justify-between gap-3 text-sm">
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate font-medium text-slate-800">
+                                            {it.productName ?? it.name ?? `Sản phẩm #${idx + 1}`}
+                                        </p>
+                                        {(it.colorName || it.sizeLabel || it.sizeName) && (
+                                            <p className="text-xs text-slate-400">
+                                                {[it.colorName, it.sizeLabel ?? it.sizeName].filter(Boolean).join(' · ')}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="shrink-0 text-right">
+                                        <p className="font-semibold text-slate-700">×{it.quantity}</p>
+                                        {fmt(it.unitPrice ?? it.price) && (
+                                            <p className="text-xs text-slate-400">{fmt(it.unitPrice ?? it.price)}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Tổng tiền */}
+                        {totalAmount != null && (
+                            <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                                <span className="text-sm font-semibold text-slate-600">Tổng cộng</span>
+                                <span className="text-lg font-extrabold text-indigo-600">{fmt(totalAmount)}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* ─ Điều hướng ─ */}
+                <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <button
+                        onClick={() => { dispatch(resetOrderState()); navigate('/orders') }}
+                        className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 shadow-sm"
+                    >
+                        📋 Xem lịch sử đơn hàng
+                    </button>
+                    <button
+                        onClick={() => { dispatch(resetOrderState()); navigate('/') }}
+                        className="flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    >
+                        🏠 Về trang chủ
+                    </button>
+                    <button
+                        onClick={() => { dispatch(resetOrderState()); navigate('/products') }}
+                        className="flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:col-span-2"
+                    >
+                        🛍️ Tiếp tục mua sắm
+                    </button>
+                </div>
+
             </div>
         )
     }
@@ -178,78 +275,10 @@ export default function OrderPage() {
 
                         {/* ── TAB: Địa chỉ đã lưu ── */}
                         {addressTab === TAB_SAVED && (
-                            <>
-                                {addressLoading ? (
-                                    <p className="text-sm text-neutral-500">Đang tải địa chỉ…</p>
-                                ) : addressError ? (
-                                    <p className="text-sm text-red-600">{addressError}</p>
-                                ) : addresses.length === 0 ? (
-                                    <div className="text-sm text-neutral-500 space-y-2">
-                                        <p>Bạn chưa có địa chỉ nào đã lưu.</p>
-                                        <p>
-                                            <button
-                                                className="font-medium text-neutral-900 underline underline-offset-2"
-                                                onClick={() => navigate('/profile/addresses')}
-                                            >
-                                                Thêm địa chỉ vào hồ sơ
-                                            </button>
-                                            {' '}hoặc{' '}
-                                            <button
-                                                className="font-medium text-neutral-900 underline underline-offset-2"
-                                                onClick={() => setAddressTab(TAB_MAP)}
-                                            >
-                                                chọn trên bản đồ
-                                            </button>
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {addresses.map((addr) => {
-                                            const isSelected = addr.addressId === selectedAddressId
-                                            const fullAddress = [
-                                                addr.streetAddress,
-                                                addr.ward,
-                                                addr.district,
-                                                addr.province,
-                                            ]
-                                                .filter(Boolean)
-                                                .join(', ')
-                                            return (
-                                                <label
-                                                    key={addr.addressId}
-                                                    className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition ${isSelected
-                                                        ? 'border-neutral-900 bg-neutral-50 ring-1 ring-neutral-900'
-                                                        : 'border-neutral-200 hover:border-neutral-400'
-                                                        }`}
-                                                >
-                                                    <input
-                                                        type="radio"
-                                                        name="address"
-                                                        value={addr.addressId}
-                                                        checked={isSelected}
-                                                        onChange={() => setSelectedAddressId(addr.addressId)}
-                                                        className="mt-1 accent-neutral-900"
-                                                    />
-                                                    <div className="text-sm">
-                                                        <div className="font-semibold text-neutral-900">
-                                                            {addr.recipientName}
-                                                            {addr.isDefault && (
-                                                                <span className="ml-2 rounded bg-neutral-900 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                                                                    Mặc định
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        {addr.phone && (
-                                                            <div className="mt-0.5 text-neutral-600">{addr.phone}</div>
-                                                        )}
-                                                        <div className="mt-0.5 text-neutral-600">{fullAddress}</div>
-                                                    </div>
-                                                </label>
-                                            )
-                                        })}
-                                    </div>
-                                )}
-                            </>
+                            <SavedAddressTab
+                                selectedAddressId={selectedAddressId}
+                                setSelectedAddressId={setSelectedAddressId}
+                            />
                         )}
 
                         {/* ── TAB: Chọn địa chỉ qua bản đồ Goong ── */}

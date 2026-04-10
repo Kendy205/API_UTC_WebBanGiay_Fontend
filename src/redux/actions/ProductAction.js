@@ -28,4 +28,16 @@ export const getProductById = createAsyncThunk(
     }
 )
 
+export const filterProductsThunk = createAsyncThunk(
+    'products/filterProducts',
+    async (params, { rejectWithValue }) => {
+        try {
+            const response = await productService.filterProducts(params);
+            // response.data is ApiResponse<IEnumerable<ProductDto>>
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.message || 'Lỗi tìm kiếm sản phẩm');
+        }
+    }
+)
    

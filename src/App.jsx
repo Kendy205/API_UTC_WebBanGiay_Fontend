@@ -12,6 +12,7 @@ import CartPage from './pages/cart/CartPage'
 import ProductDetail from './components/shoes/ProductDetail'
 import OrderPage from './pages/order/OrderPage'
 import OrderHistoryPage from './pages/order/OrderHistoryPage'
+import SearchResultsPage from './pages/search/SearchResultsPage'
 import { Provider } from 'react-redux'
 import { store } from './redux/store'
 
@@ -28,6 +29,7 @@ function App() {
                     <Route path="" element={<UserTemplate />}>
                         <Route path="/" element={<HomePage />} />
                         <Route path="/home" element={<HomePage />} />
+                        <Route path="/search" element={<SearchResultsPage />} />
                         {/* <Route path="/products" element={<ProductList />} /> */}
                         <Route path="/products/:productId" element={<ProductDetail />} />
                         {/* Auth: USER */}

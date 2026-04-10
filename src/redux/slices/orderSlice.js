@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { fetchAddressesThunk, createOrderThunk } from '../actions/orderAction'
+import { fetchAddressesThunk, addAddressThunk, createOrderThunk, fetchMyOrdersThunk, cancelOrderThunk } from '../actions/orderAction'
 
 const initialState = {
     // Danh sách địa chỉ
@@ -7,25 +7,38 @@ const initialState = {
     addressLoading: false,
     addressError: null,
 
+    // Thêm địa chỉ
+    addingAddress: false,
+    addAddressError: null,
+
     // Trạng thái tạo đơn hàng
     submitting: false,
     orderError: null,
     orderSuccess: false,
+    createdOrder: null,
+
+    // Lịch sử đơn hàng
+    myOrders: [],
+    loadingOrders: false,
+    myOrdersError: null,
+    
+    // Hủy đơn hàng
+    cancellingOrder: false,
+    cancelOrderError: null,
 }
 
 const orderSlice = createSlice({
     name: 'order',
     initialState,
     reducers: {
-        /** Reset toàn bộ state order (dùng khi rời khỏi trang order) */
         resetOrderState: (state) => {
             state.submitting = false
             state.orderError = null
             state.orderSuccess = false
+            state.createdOrder = null
         },
     },
     extraReducers: (builder) => {
-        // ── fetchAddressesThunk ──────────────────────────────────
         builder
             .addCase(fetchAddressesThunk.pending, (state) => {
                 state.addressLoading = true
@@ -40,20 +53,60 @@ const orderSlice = createSlice({
                 state.addressError = action.payload ?? 'Không thể tải địa chỉ.'
             })
 
-        // ── createOrderThunk ─────────────────────────────────────
+        builder
+            .addCase(addAddressThunk.pending, (state) => {
+                state.addingAddress = true
+                state.addAddressError = null
+            })
+            .addCase(addAddressThunk.fulfilled, (state) => {
+                state.addingAddress = false
+            })
+            .addCase(addAddressThunk.rejected, (state, action) => {
+                state.addingAddress = false
+                state.addAddressError = action.payload ?? 'Không thể thêm địa chỉ.'
+            })
+
         builder
             .addCase(createOrderThunk.pending, (state) => {
                 state.submitting = true
                 state.orderError = null
                 state.orderSuccess = false
             })
-            .addCase(createOrderThunk.fulfilled, (state) => {
+            .addCase(createOrderThunk.fulfilled, (state, action) => {
                 state.submitting = false
                 state.orderSuccess = true
+                state.createdOrder = action.payload ?? null
             })
             .addCase(createOrderThunk.rejected, (state, action) => {
                 state.submitting = false
                 state.orderError = action.payload ?? 'Đặt hàng thất bại.'
+            })
+
+        builder
+            .addCase(fetchMyOrdersThunk.pending, (state) => {
+                state.loadingOrders = true
+                state.myOrdersError = null
+            })
+            .addCase(fetchMyOrdersThunk.fulfilled, (state, action) => {
+                state.loadingOrders = false
+                state.myOrders = action.payload
+            })
+            .addCase(fetchMyOrdersThunk.rejected, (state, action) => {
+                state.loadingOrders = false
+                state.myOrdersError = action.payload ?? 'Không thể tải lịch sử đơn hàng.'
+            })
+
+        builder
+            .addCase(cancelOrderThunk.pending, (state) => {
+                state.cancellingOrder = true
+                state.cancelOrderError = null
+            })
+            .addCase(cancelOrderThunk.fulfilled, (state) => {
+                state.cancellingOrder = false
+            })
+            .addCase(cancelOrderThunk.rejected, (state, action) => {
+                state.cancellingOrder = false
+                state.cancelOrderError = action.payload ?? 'Không thể hủy đơn hàng.'
             })
     },
 })

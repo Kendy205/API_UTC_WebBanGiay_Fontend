@@ -1,35 +1,20 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { getProductById } from '../../redux/actions/ProductAction'
 import Skeleton from '../loading/Skeleton'
 import VariantSelector from './VariantSelector'
-import { reviewService } from '../../services/ReviewService'
+import { getProductReviewsThunk } from '../../redux/actions/reviewAction'
 
 function ProductReviews({ productId }) {
-    const [reviews, setReviews] = useState([])
-    const [loading, setLoading] = useState(true)
+    const dispatch = useDispatch()
+    const { reviews, loadingReviews: loading } = useSelector(state => state.review)
 
     useEffect(() => {
-        let ignore = false
-        const loadReviews = async () => {
-            try {
-                setLoading(true)
-                const res = await reviewService.getProductReviews(productId)
-                let data = res.data
-                if (res.data && res.data.data) {
-                    data = res.data.data
-                }
-                if (!ignore) setReviews(Array.isArray(data) ? data : [])
-            } catch (error) {
-                console.error("Lỗi lấy danh sách đánh giá", error)
-            } finally {
-                if (!ignore) setLoading(false)
-            }
+        if (productId) {
+            dispatch(getProductReviewsThunk(productId))
         }
-        if (productId) loadReviews()
-        return () => { ignore = true }
-    }, [productId])
+    }, [productId, dispatch])
 
     if (loading) return <div className="mt-8 text-neutral-500">Đang tải đánh giá...</div>
 

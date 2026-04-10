@@ -42,7 +42,7 @@ export const addToCartThunk = createAsyncThunk(
  */
 export const updateItemQuantityThunk = createAsyncThunk(
     'cart/updateItemQuantityThunk',
-    async ({ cartItemId, quantity }, { dispatch, rejectWithValue }) => {
+    async ({ cartItemId, quantity }, { rejectWithValue }) => {
         try {
             const res = await cartService.updateItem(cartItemId, quantity)
             // Trả về trực tiếp mảng items mới

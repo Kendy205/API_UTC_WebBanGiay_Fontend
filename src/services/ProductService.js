@@ -12,7 +12,11 @@ export class ProductService extends BaseServices
     }
     getProductById = (productId) => {
         return this.get(`api/Product/${productId}`);
-    } 
+    }
+    filterProducts = (params = {}) => {
+        // params: { keyword, categoryId, brandId, minPrice, maxPrice, pageNumber, pageSize }
+        return this.get('api/Product/filter', { params });
+    }
     // getProductVariants = (productId) => {
     //     return this.get(`api/ProductDetail/${productId}`);
     // }   

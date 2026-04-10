@@ -8,6 +8,12 @@ export class OrderService extends BaseServices {
     getMyAddresses = () => this.get('api/Address')
 
     /**
+     * Thêm địa chỉ mới
+     * POST /api/Address
+     */
+    addAddress = (body) => this.post('api/Address', body)
+
+    /**
      * Tạo đơn hàng mới.
      * POST /api/Order/checkout
      */
@@ -18,6 +24,12 @@ export class OrderService extends BaseServices {
      * GET /api/Order
      */
     getMyOrders = () => this.get('api/Order')
+
+    /**
+     * Hủy đơn hàng.
+     * POST /api/Order/cancel
+     */
+    cancelOrder = (body) => this.post('api/Order/cancel', body)
 }
 
 export const orderService = new OrderService()

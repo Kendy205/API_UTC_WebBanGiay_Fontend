@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { orderService } from '../../services/OrderService'
-import { reviewService } from '../../services/ReviewService'
+import { useSelector, useDispatch } from 'react-redux'
+import { fetchMyOrdersThunk, cancelOrderThunk } from '../../redux/actions/orderAction'
+import { createReviewThunk } from '../../redux/actions/reviewAction'
 import Pagination from '../../components/common/Pagination'
 import HistoryOrderItem from './HistoryOrderItem'
 
@@ -25,44 +26,28 @@ const StarRating = ({ rating, setRating }) => {
 }
 
 export default function OrderHistoryPage() {
-    const [orders, setOrders] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
+    const dispatch = useDispatch()
+    const { myOrders: orders, loadingOrders: loading, myOrdersError: error } = useSelector(state => state.order)
+    const { submittingReview } = useSelector(state => state.review)
 
     // Review Modal State
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedItem, setSelectedItem] = useState(null)
     const [rating, setRating] = useState(5)
     const [reviewContent, setReviewContent] = useState('')
-    const [submittingReview, setSubmittingReview] = useState(false)
+
+    // Cancel Modal State
+    const [cancelModal, setCancelModal] = useState({ open: false, orderId: null })
+    const [isCancelling, setIsCancelling] = useState(false)
+    const [cancelError, setCancelError] = useState(null)
 
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1)
     const pageSize = 5
 
     useEffect(() => {
-        fetchOrders()
-    }, [])
-
-    const fetchOrders = async () => {
-        try {
-            setLoading(true)
-            const response = await orderService.getMyOrders()
-            // Assume the response follows a standard format or direct array
-            let data = response.data
-            // If response wraps in "data" property again based on the provided JSON
-            if (response.data && response.data.data) {
-                data = response.data.data
-            }
-            // Sort by createdAt descending conceptually, assuming backend returns correct order
-            setOrders(Array.isArray(data) ? data : [])
-        } catch (err) {
-            console.error('Lỗi khi lấy lịch sử đơn hàng', err)
-            setError('Không thể tải lịch sử đơn hàng. Vui lòng thử lại sau.')
-        } finally {
-            setLoading(false)
-        }
-    }
+        dispatch(fetchMyOrdersThunk())
+    }, [dispatch])
 
     const openReviewModal = (item) => {
         setSelectedItem(item)
@@ -80,22 +65,45 @@ export default function OrderHistoryPage() {
         if (!selectedItem) return
 
         try {
-            setSubmittingReview(true)
             const payload = {
                 orderItemId: selectedItem.orderItemId,
                 rating: rating,
                 reviewTitle: '',
                 reviewContent: reviewContent
             }
-            await reviewService.createReview(payload)
+            await dispatch(createReviewThunk(payload)).unwrap()
             alert('Cảm ơn bạn đã gửi đánh giá!')
             closeReviewModal()
-            // Optionally: Could mark the item as reviewed in state so the button disappears
         } catch (err) {
             console.error('Lỗi gửi đánh giá', err)
-            alert(err.response?.data || 'Đã có lỗi xảy ra khi gửi đánh giá.')
+            alert(err || 'Đã có lỗi xảy ra khi gửi đánh giá.')
+        }
+    }
+
+    const openCancelModal = (orderId) => {
+        setCancelModal({ open: true, orderId })
+        setCancelError(null)
+    }
+
+    const closeCancelModal = () => {
+        if (isCancelling) return
+        setCancelModal({ open: false, orderId: null })
+        setCancelError(null)
+    }
+
+    const handleCancelOrder = async () => {
+        const { orderId } = cancelModal
+        if (!orderId) return
+        setIsCancelling(true)
+        setCancelError(null)
+        try {
+            await dispatch(cancelOrderThunk({ orderId })).unwrap()
+            closeCancelModal()
+        } catch (err) {
+            console.error('Lỗi khi hủy đơn hàng', err)
+            setCancelError(typeof err === 'string' ? err : 'Đã có lỗi xảy ra khi hủy đơn hàng.')
         } finally {
-            setSubmittingReview(false)
+            setIsCancelling(false)
         }
     }
 
@@ -150,9 +158,9 @@ export default function OrderHistoryPage() {
                                 </div>
                                 <div className="text-right">
                                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${order.orderStatus === 'pending' ? 'bg-orange-100 text-orange-700' :
-                                            order.orderStatus === 'completed' ? 'bg-green-100 text-green-700' :
-                                                order.orderStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                                    'bg-blue-100 text-blue-700'
+                                        order.orderStatus === 'completed' ? 'bg-green-100 text-green-700' :
+                                            order.orderStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                                'bg-blue-100 text-blue-700'
                                         }`}>
                                         {getStatusText(order.orderStatus)}
                                     </span>
@@ -163,17 +171,27 @@ export default function OrderHistoryPage() {
                             <div className="p-6">
                                 <div className="space-y-4">
                                     {order.orderItems?.map((item) => (
-                                        <HistoryOrderItem 
-                                            key={item.orderItemId} 
-                                            item={item} 
-                                            openReviewModal={openReviewModal} 
+                                        <HistoryOrderItem
+                                            key={item.orderItemId}
+                                            item={item}
+                                            openReviewModal={openReviewModal}
                                         />
                                     ))}
                                 </div>
                             </div>
 
                             {/* Footer Order summary */}
-                            <div className="bg-neutral-50 px-6 py-4 border-t border-neutral-100 flex justify-end">
+                            <div className="bg-neutral-50 px-6 py-4 border-t border-neutral-100 flex justify-between items-end">
+                                <div>
+                                    {order.orderStatus?.toLowerCase() === 'pending' && (
+                                        <button
+                                            onClick={() => openCancelModal(order.orderId)}
+                                            className="text-sm font-medium text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 px-4 py-2 rounded transition-colors"
+                                        >
+                                            Hủy đơn hàng
+                                        </button>
+                                    )}
+                                </div>
                                 <div className="text-right">
                                     <p className="text-sm text-neutral-500">Phí vận chuyển: {formatCurrency(order.shippingFee)}</p>
                                     <p className="text-lg font-bold text-red-600 mt-1">Tổng tiền: {formatCurrency(order.totalAmount)}</p>
@@ -183,7 +201,7 @@ export default function OrderHistoryPage() {
                     ))}
 
                     {/* Phân trang */}
-                    <Pagination 
+                    <Pagination
                         currentPage={currentPage}
                         totalPages={Math.max(1, Math.ceil(orders.length / pageSize))}
                         onPageChange={setCurrentPage}
@@ -237,6 +255,66 @@ export default function OrderHistoryPage() {
                                 className={`px-4 py-2 text-sm font-medium text-white rounded bg-neutral-900 hover:bg-neutral-800 ${submittingReview ? 'opacity-70 cursor-not-allowed' : ''}`}
                             >
                                 {submittingReview ? 'Đang gửi...' : 'Hoàn thành'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Hủy đơn hàng */}
+            {cancelModal.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+                    <div className="bg-white rounded-lg shadow-lg w-full max-w-sm overflow-hidden">
+                        {/* Header */}
+                        <div className="p-4 border-b border-neutral-100 flex justify-between items-center bg-neutral-50">
+                            <h3 className="font-semibold text-lg text-neutral-900">Hủy đơn hàng</h3>
+                            <button
+                                onClick={closeCancelModal}
+                                disabled={isCancelling}
+                                className="text-neutral-400 hover:text-neutral-700 text-xl font-bold disabled:opacity-40"
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-6">
+                            {/* Icon cảnh báo */}
+                            <div className="flex justify-center mb-4">
+                                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16" className="text-red-500">
+                                        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <p className="text-center text-sm text-neutral-600">
+                                Bạn có chắc chắn muốn <span className="font-semibold text-red-600">hủy đơn hàng</span> này không? Hành động này không thể hoàn tác.
+                            </p>
+
+                            {/* Error */}
+                            {cancelError && (
+                                <p className="mt-3 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-center text-xs text-red-600">
+                                    {cancelError}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-4 border-t border-neutral-100 bg-neutral-50 flex justify-end gap-3">
+                            <button
+                                onClick={closeCancelModal}
+                                disabled={isCancelling}
+                                className="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded hover:bg-neutral-50 disabled:opacity-50"
+                            >
+                                Không, giữ lại
+                            </button>
+                            <button
+                                onClick={handleCancelOrder}
+                                disabled={isCancelling}
+                                className={`px-4 py-2 text-sm font-medium text-white rounded bg-red-600 hover:bg-red-700 transition-colors ${isCancelling ? 'opacity-70 cursor-not-allowed' : ''
+                                    }`}
+                            >
+                                {isCancelling ? 'Đang hủy...' : 'Xác nhận hủy'}
                             </button>
                         </div>
                     </div>
