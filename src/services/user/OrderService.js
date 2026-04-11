@@ -30,6 +30,13 @@ export class OrderService extends BaseServices {
      * POST /api/Order/cancel
      */
     cancelOrder = (body) => this.post('api/Order/cancel', body)
+
+    /**
+     * Lấy URL thanh toán VNPay cho một đơn hàng.
+     * POST /api/Order/{orderId}/pay-vnpay
+     * Returns: { paymentUrl: string }
+     */
+    payVnpay = (orderId) => this.post(`api/Order/${orderId}/pay-vnpay`)
 }
 
 export const orderService = new OrderService()

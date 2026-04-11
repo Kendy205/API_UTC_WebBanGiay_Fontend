@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { fetchAddressesThunk, addAddressThunk, createOrderThunk, fetchMyOrdersThunk, cancelOrderThunk } from '../actions/orderAction'
+import { fetchAddressesThunk, addAddressThunk, createOrderThunk, fetchMyOrdersThunk, cancelOrderThunk, payVnpayThunk } from '../actions/orderAction'
 
 const initialState = {
     // Danh sách địa chỉ
@@ -25,6 +25,10 @@ const initialState = {
     // Hủy đơn hàng
     cancellingOrder: false,
     cancelOrderError: null,
+
+    // Thanh toán VNPay
+    vnpayLoading: false,
+    vnpayError: null,
 }
 
 const orderSlice = createSlice({
@@ -107,6 +111,19 @@ const orderSlice = createSlice({
             .addCase(cancelOrderThunk.rejected, (state, action) => {
                 state.cancellingOrder = false
                 state.cancelOrderError = action.payload ?? 'Không thể hủy đơn hàng.'
+            })
+
+        builder
+            .addCase(payVnpayThunk.pending, (state) => {
+                state.vnpayLoading = true
+                state.vnpayError = null
+            })
+            .addCase(payVnpayThunk.fulfilled, (state) => {
+                state.vnpayLoading = false
+            })
+            .addCase(payVnpayThunk.rejected, (state, action) => {
+                state.vnpayLoading = false
+                state.vnpayError = action.payload ?? 'Không thể tạo link thanh toán VNPay.'
             })
     },
 })

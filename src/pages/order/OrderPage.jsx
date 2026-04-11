@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { fetchAddressesThunk, createOrderThunk } from '../../redux/actions/orderAction'
+import { fetchAddressesThunk, createOrderThunk, payVnpayThunk } from '../../redux/actions/orderAction'
 import { resetOrderState } from '../../redux/slices/orderSlice'
 import GoongAddressPicker from '../../components/map/GoongAddressPicker'
 import SavedAddressTab from './SavedAddressTab'
 
 const PAYMENT_METHODS = [
     { value: 'COD', label: '💵 Thanh toán khi nhận hàng (COD)' },
-    { value: 'bank_transfer', label: '🏦 Chuyển khoản ngân hàng' },
+    { value: 'bank_transfer', label: '🏦 Chuyển khoản VNPay' },
     { value: 'card', label: '💳 Thẻ tín dụng / Ghi nợ' },
     { value: 'ewallet', label: '📱 Ví điện tử (Momo, ZaloPay…)' },
 ]
@@ -25,7 +25,7 @@ export default function OrderPage() {
     const items = useSelector((s) => s.cart.items)
     const isAuthenticated = useSelector((s) => s.auth.isAuthenticated)
 
-    const { addresses, addressLoading, addressError, submitting, orderError, orderSuccess, createdOrder } =
+    const { addresses, addressLoading, addressError, submitting, orderError, orderSuccess, createdOrder, vnpayLoading, vnpayError } =
         useSelector((s) => s.order)
 
     // ── Local UI state ───────────────────────────────────────────
@@ -82,7 +82,7 @@ export default function OrderPage() {
             ? !!selectedAddressId
             : !!mapAddress
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (!isAddressReady) return
 
         const payload = {
@@ -111,8 +111,25 @@ export default function OrderPage() {
                 isDefault: false
             }
         }
-        console.log(mapAddress)
-        dispatch(createOrderThunk(payload))
+
+        // Tạo đơn hàng trước
+        const result = await dispatch(createOrderThunk(payload))
+        console.log(result)
+        // Nếu đặt hàng thành công và là chuyển khoản VNPay → gọi API lấy link rồi redirect
+        if (createOrderThunk.fulfilled.match(result) && paymentMethod === 'bank_transfer') {
+            const newOrderId =
+                result.payload?.orderId ??
+                result.payload?.id ??
+                null
+
+            if (newOrderId) {
+                dispatch(payVnpayThunk(newOrderId))
+                // Sau lệnh này trình duyệt sẽ redirect, không cần làm gì thêm
+            } else {
+                // Không lấy được orderId — vẫn hiển thị trang thành công thường
+                // (UI sẽ hiển thị do orderSuccess = true)
+            }
+        }
     }
 
     /* ── Đặt hàng thành công ── */
@@ -122,11 +139,11 @@ export default function OrderPage() {
             : null
 
         const STATUS_MAP = {
-            Pending:    { label: 'Chờ xác nhận', color: 'bg-amber-100 text-amber-700 border-amber-200' },
-            Processing: { label: 'Đang xử lý',     color: 'bg-blue-100 text-blue-700 border-blue-200' },
-            Shipped:    { label: 'Đang giao',        color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
-            Delivered:  { label: 'Đã giao',           color: 'bg-green-100 text-green-700 border-green-200' },
-            Cancelled:  { label: 'Đã hủy',           color: 'bg-red-100 text-red-700 border-red-200' },
+            Pending: { label: 'Chờ xác nhận', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+            Processing: { label: 'Đang xử lý', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+            Shipped: { label: 'Đang giao', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+            Delivered: { label: 'Đã giao', color: 'bg-green-100 text-green-700 border-green-200' },
+            Cancelled: { label: 'Đã hủy', color: 'bg-red-100 text-red-700 border-red-200' },
         }
         const statusKey = createdOrder?.status ?? createdOrder?.orderStatus ?? 'Pending'
         const statusInfo = STATUS_MAP[statusKey] ?? STATUS_MAP.Pending
@@ -214,7 +231,7 @@ export default function OrderPage() {
                 {/* ─ Điều hướng ─ */}
                 <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <button
-                        onClick={() => { dispatch(resetOrderState()); navigate('/orders') }}
+                        onClick={() => { dispatch(resetOrderState()); navigate('/order-history') }}
                         className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 shadow-sm"
                     >
                         📋 Xem lịch sử đơn hàng
@@ -382,6 +399,13 @@ export default function OrderPage() {
                             </p>
                         )}
 
+                        {/* Lỗi VNPay (sau khi tạo đơn thành công nhưng lấy link thất bại) */}
+                        {vnpayError && (
+                            <p className="mt-3 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700">
+                                ⚠️ {vnpayError}
+                            </p>
+                        )}
+
                         {/* Cảnh báo chưa chọn địa chỉ */}
                         {!isAddressReady && !addressLoading && (
                             <p className="mt-3 text-xs text-amber-600">
@@ -392,10 +416,16 @@ export default function OrderPage() {
                         <button
                             type="button"
                             onClick={handleConfirm}
-                            disabled={submitting || addressLoading || !isAddressReady}
+                            disabled={submitting || vnpayLoading || addressLoading || !isAddressReady}
                             className="mt-5 w-full rounded-xl bg-neutral-900 py-3 text-sm font-bold text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            {submitting ? 'Đang xử lý…' : '✅ Xác nhận đặt hàng'}
+                            {vnpayLoading
+                                ? '🔄 Đang chuyển sang VNPay…'
+                                : submitting
+                                    ? 'Đang xử lý…'
+                                    : paymentMethod === 'bank_transfer'
+                                        ? '🏦 Thanh toán qua VNPay'
+                                        : '✅ Xác nhận đặt hàng'}
                         </button>
 
                         <button

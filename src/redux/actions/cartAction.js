@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import { cartService } from '../../services/CartService'
+import { cartService } from '../../services/user/CartService'
 
 /**
  * Lấy danh sách giỏ hàng

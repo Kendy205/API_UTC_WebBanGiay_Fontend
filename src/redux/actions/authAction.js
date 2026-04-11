@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import { authService } from '../../services/AuthService'
+import { authService } from '../../services/user/AuthService'
 import { resolveRoleFromAuth } from '../../utils/auth/authRole'
 
 function pickErrorMessage(error) {

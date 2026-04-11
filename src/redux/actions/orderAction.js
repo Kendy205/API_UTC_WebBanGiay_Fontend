@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import { orderService } from '../../services/OrderService'
+import { orderService } from '../../services/user/OrderService'
 import { fetchCartThunk } from './cartAction'
 
 /**
@@ -58,6 +58,40 @@ export const createOrderThunk = createAsyncThunk(
                 error?.response?.data?.message ??
                 error?.response?.data ??
                 'Đặt hàng thất bại. Vui lòng thử lại.'
+            return rejectWithValue(typeof msg === 'string' ? msg : JSON.stringify(msg))
+        }
+    }
+)
+
+/**
+ * payVnpayThunk
+ * Gọi sau khi tạo đơn hàng thành công với phương thức bank_transfer.
+ * Backend trả về paymentUrl → redirect trình duyệt sang VNPay.
+ */
+export const payVnpayThunk = createAsyncThunk(
+    'order/payVnpay',
+    async (orderId, { rejectWithValue }) => {
+        try {
+            const response = await orderService.payVnpay(orderId)
+            const data = response.data?.data ?? response.data
+            // data có thể là string URL hoặc object { paymentUrl }
+            const paymentUrl =
+                typeof data === 'string'
+                    ? data
+                    : data?.paymentUrl ?? data?.url ?? null
+
+            if (!paymentUrl) {
+                return rejectWithValue('Không nhận được link thanh toán từ server.')
+            }
+
+            // Redirect trình duyệt sang trang thanh toán VNPay
+            window.location.href = paymentUrl
+            return paymentUrl
+        } catch (error) {
+            const msg =
+                error?.response?.data?.message ??
+                error?.response?.data ??
+                'Không thể tạo link thanh toán VNPay.'
             return rejectWithValue(typeof msg === 'string' ? msg : JSON.stringify(msg))
         }
     }
