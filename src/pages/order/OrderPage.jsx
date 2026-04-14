@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { fetchAddressesThunk, createOrderThunk, payVnpayThunk } from '../../redux/actions/orderAction'
-import { resetOrderState } from '../../redux/slices/orderSlice'
+import { fetchAddressesThunk, createOrderThunk, payVnpayThunk } from '../../redux/actions/user/orderAction'
+import { resetOrderState } from '../../redux/slices/user/orderSlice'
 import GoongAddressPicker from '../../components/map/GoongAddressPicker'
 import SavedAddressTab from './SavedAddressTab'
 

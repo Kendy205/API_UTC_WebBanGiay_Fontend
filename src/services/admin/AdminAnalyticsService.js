@@ -1,19 +1,19 @@
-﻿import { baseServices } from '../user/BaseService'
+import { BaseServices } from '../BaseService'
 
 /**
  * AdminAnalyticsService
  *
  * GET  /api/Admin/analytics/overview
- *   â†’ { totalRevenue, totalOrders, newCustomers, avgOrderValue,
+ *   -> { totalRevenue, totalOrders, newCustomers, avgOrderValue,
  *       revenueByMonth:[{month,revenue}], ordersByStatus:{...} }
  *
  * GET  /api/Admin/analytics/revenue?from=ISO&to=ISO
- *   â†’ [{ date, revenue, orders }]
+ *   -> [{ date, revenue, orders }]
  */
-class AdminAnalyticsService {
-    getOverview = () => baseServices.get('/api/Admin/analytics/overview')
+export class AdminAnalyticsService extends BaseServices {
+    getOverview = () => this.get('/api/Analytics/overview')
     getRevenueChart = (params = {}) =>
-        baseServices.get('/api/Admin/analytics/revenue', { params })
+        this.get('/api/Analytics/revenue', { params })
 }
 
 export const adminAnalyticsService = new AdminAnalyticsService()

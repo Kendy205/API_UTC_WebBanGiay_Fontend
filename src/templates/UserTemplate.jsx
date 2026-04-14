@@ -4,9 +4,9 @@ import { logout } from '../redux/slices/authSlice'
 import { ROLE_ADMIN } from '../utils/constants/System'
 import LoadingLink from '../components/loading/LoadingLink'
 import { navigateWithRouteLoading } from '../utils/route/navigateWithRouteLoading'
-import { fetchCartThunk } from '../redux/actions/cartAction'
+import { fetchCartThunk } from '../redux/actions/user/cartAction'
 import { useEffect, useState } from 'react'
-import { clearCartLocal } from '../redux/slices/cartSlice'
+import { clearCartLocal } from '../redux/slices/user/cartSlice'
 
 function normalizeRole(r) {
     if (r == null) return null

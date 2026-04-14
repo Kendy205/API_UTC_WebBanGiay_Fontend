@@ -1,4 +1,4 @@
-﻿import { baseServices } from '../user/BaseService'
+﻿import { BaseServices } from '../BaseService'
 
 /**
  * AdminCustomerService
@@ -10,10 +10,10 @@
  *   â† { isActive: bool }
  *   â†’ { id, isActive }
  */
-class AdminCustomerService {
-    getAll = (params = {}) => baseServices.get('/api/Admin/customers', { params })
+export class AdminCustomerService extends BaseServices {
+    getAll = (params = {}) => this.get('/api/Admin/customers', { params })
     updateStatus = (id, isActive) =>
-        baseServices.put(`/api/Admin/customers/${id}/status`, { isActive })
+        this.put(`/api/Admin/customers/${id}/status`, { isActive })
 }
 
 export const adminCustomerService = new AdminCustomerService()

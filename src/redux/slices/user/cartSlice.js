@@ -5,7 +5,7 @@ import {
     updateItemQuantityThunk,
     removeItemThunk,
     clearCartThunk,
-} from '../actions/cartAction'
+} from '../../actions/user/cartAction'
 
 const initialState = {
     items: [],

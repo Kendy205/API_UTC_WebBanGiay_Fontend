@@ -1,9 +1,9 @@
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { clearCartThunk } from '../../redux/actions/cartAction'
+import { clearCartThunk } from '../../redux/actions/user/cartAction'
 import CartList from '../../components/cart/CartList'
 import { useEffect } from 'react'
-import { fetchCartThunk } from '../../redux/actions/cartAction'
+import { fetchCartThunk } from '../../redux/actions/user/cartAction'
 
 export default function CartPage() {
     const dispatch = useDispatch()

@@ -1,4 +1,4 @@
-﻿import { baseServices } from '../user/BaseService'
+﻿import { BaseServices } from '../BaseService'
 
 /**
  * AdminRefundService
@@ -10,10 +10,10 @@
  *   â† { status: "Approved" | "Rejected" }
  *   â†’ { id, status }
  */
-class AdminRefundService {
-    getAll = (params = {}) => baseServices.get('/api/Admin/refunds', { params })
+export class AdminRefundService extends BaseServices {
+    getAll = (params = {}) => this.get('/api/Admin/refunds', { params })
     updateStatus = (id, status) =>
-        baseServices.put(`/api/Admin/refunds/${id}/status`, { status })
+        this.put(`/api/Admin/refunds/${id}/status`, { status })
 }
 
 export const adminRefundService = new AdminRefundService()

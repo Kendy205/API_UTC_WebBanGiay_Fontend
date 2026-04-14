@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { addAddressThunk } from '../../redux/actions/orderAction'
+import { addAddressThunk } from '../../redux/actions/user/orderAction'
 
 export default function SavedAddressTab({ selectedAddressId, setSelectedAddressId }) {
     const dispatch = useDispatch()

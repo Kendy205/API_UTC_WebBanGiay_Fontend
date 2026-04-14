@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { MOCK_CATEGORIES } from '../adminMockData'
 import { PageHeader, Btn, Table, Modal, FormField, Input, useMockState, badge, Toggle } from '../adminShared'
-
-const EMPTY = { name: '', description: '', isActive: true }
+import { EMPTY } from './CategoriesShared'
 
 export default function CategoriesPage() {
     const [items, setItems] = useMockState(MOCK_CATEGORIES)

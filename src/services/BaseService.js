@@ -1,10 +1,10 @@
 import axios from 'axios'
-import { DOMAN, REFRESH_TOKEN, TOKEN } from '../../utils/constants/System'
-import { resolveRoleFromAuth } from '../../utils/auth/authRole'
+import { DOMAN, REFRESH_TOKEN, TOKEN } from '../utils/constants/System'
+import { resolveRoleFromAuth } from '../utils/auth/authRole'
 import {
     startGlobalLoading,
     stopGlobalLoading,
-} from '../../redux/slices/uiSlice'
+} from '../redux/slices/uiSlice'
 
 /** Instance dùng chung: baseURL + JSON + interceptors */
 export const http = axios.create({
@@ -26,7 +26,7 @@ function isPublicAuthPath(url) {
 let storePromise = null
 function getStore() {
     if (!storePromise) {
-        storePromise = import('../../redux/store').then((m) => m.store)
+        storePromise = import('../redux/store').then((m) => m.store)
     }
     return storePromise
 }
@@ -68,8 +68,8 @@ function processQueue(error, token) {
 }
 
 async function dispatchLogout() {
-    const { store } = await import('../../redux/store')
-    const { logout } = await import('../../redux/slices/authSlice')
+    const { store } = await import('../redux/store')
+    const { logout } = await import('../redux/slices/authSlice')
     store.dispatch(logout())
 }
 
@@ -150,8 +150,8 @@ http.interceptors.response.use(
             const newRefresh = body.data.refreshToken
             const newRole = resolveRoleFromAuth(body.data, newAccess)
 
-            const { store } = await import('../../redux/store')
-            const { hydrateTokens } = await import('../../redux/slices/authSlice')
+            const { store } = await import('../redux/store')
+            const { hydrateTokens } = await import('../redux/slices/authSlice')
             store.dispatch(
                 hydrateTokens({
                     accessToken: newAccess,

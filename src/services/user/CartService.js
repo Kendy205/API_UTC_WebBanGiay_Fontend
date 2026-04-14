@@ -1,4 +1,4 @@
-import { BaseServices } from './BaseService'
+import { BaseServices } from '../BaseService'
 
 export class CartService extends BaseServices {
     /**

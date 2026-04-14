@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { addToCartThunk } from '../../redux/actions/cartAction'
+import { addToCartThunk } from '../../redux/actions/user/cartAction'
 import { useNavigate } from 'react-router-dom'
 
 /**

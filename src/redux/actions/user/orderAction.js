@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import { orderService } from '../../services/user/OrderService'
+import { orderService } from '../../../services/user/OrderService'
 import { fetchCartThunk } from './cartAction'
 
 /**
@@ -124,7 +124,7 @@ export const cancelOrderThunk = createAsyncThunk(
     'order/cancelOrder',
     async ({ orderId }, { dispatch, rejectWithValue }) => {
         try {
-            const response = await orderService.cancelOrder({ orderId })
+            const response = await orderService.cancelOrder(orderId)
             dispatch(fetchMyOrdersThunk())
             return response.data?.data ?? response.data
         } catch (error) {

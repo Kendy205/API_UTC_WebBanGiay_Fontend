@@ -1,4 +1,4 @@
-﻿import { baseServices } from '../user/BaseService'
+﻿import { BaseServices } from '../BaseService'
 
 /**
  * AdminPromotionService
@@ -17,11 +17,11 @@
  * DELETE /api/Admin/promotions/{id}
  *   â†’ { success: true }
  */
-class AdminPromotionService {
-    getAll = () => baseServices.get('/api/Admin/promotions')
-    create = (data) => baseServices.post('/api/Admin/promotions', data)
-    update = (id, data) => baseServices.put(`/api/Admin/promotions/${id}`, data)
-    remove = (id) => baseServices.delete(`/api/Admin/promotions/${id}`)
+export class AdminPromotionService extends BaseServices {
+    getAll = () => this.get('/api/Admin/promotions')
+    create = (data) => this.post('/api/Admin/promotions', data)
+    update = (id, data) => this.put(`/api/Admin/promotions/${id}`, data)
+    remove = (id) => this.delete(`/api/Admin/promotions/${id}`)
 }
 
 export const adminPromotionService = new AdminPromotionService()

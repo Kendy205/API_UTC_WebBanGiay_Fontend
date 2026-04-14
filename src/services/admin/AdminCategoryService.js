@@ -1,4 +1,4 @@
-﻿import { baseServices } from '../user/BaseService'
+﻿import { BaseServices } from '../BaseService'
 
 /**
  * AdminCategoryService
@@ -17,11 +17,11 @@
  * DELETE /api/Admin/categories/{id}
  *   â†’ { success: true }
  */
-class AdminCategoryService {
-    getAll = () => baseServices.get('/api/Admin/categories')
-    create = (data) => baseServices.post('/api/Admin/categories', data)
-    update = (id, data) => baseServices.put(`/api/Admin/categories/${id}`, data)
-    remove = (id) => baseServices.delete(`/api/Admin/categories/${id}`)
+export class AdminCategoryService extends BaseServices {
+    getAll = () => this.get('/api/Category')
+    create = (data) => this.post('/api/Category', data)
+    update = (id, data) => this.put(`/api/Category/${id}`, data)
+    remove = (id) => this.delete(`/api/Category/${id}`)
 }
 
 export const adminCategoryService = new AdminCategoryService()

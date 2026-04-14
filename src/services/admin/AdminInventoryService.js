@@ -1,4 +1,4 @@
-﻿import { baseServices } from '../user/BaseService'
+﻿import { BaseServices } from '../BaseService'
 
 /**
  * AdminInventoryService
@@ -10,10 +10,10 @@
  *   â† { stock, lowStockThreshold }
  *   â†’ { productId, stock }
  */
-class AdminInventoryService {
-    getAll = (params = {}) => baseServices.get('/api/Admin/inventory', { params })
+export class AdminInventoryService extends BaseServices {
+    getAll = (params = {}) => this.get('/api/Admin/inventory', { params })
     update = (productId, data) =>
-        baseServices.put(`/api/Admin/inventory/${productId}`, data)
+        this.put(`/api/Admin/inventory/${productId}`, data)
 }
 
 export const adminInventoryService = new AdminInventoryService()

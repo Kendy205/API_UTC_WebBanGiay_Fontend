@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { MOCK_REVIEWS } from '../adminMockData'
 import { PageHeader, Btn, Table, useMockState, badge, fmtDate, Toggle } from '../adminShared'
+import { stars } from './ReviewsShared'
 
 export default function ReviewsAdminPage() {
     const [items, setItems] = useMockState(MOCK_REVIEWS)
@@ -12,8 +13,6 @@ export default function ReviewsAdminPage() {
     const handleDelete = (id) => { if (confirm('Xóa đánh giá này?')) setItems((p) => p.filter((x) => x.id !== id)) }
 
     const filtered = filter ? items.filter((x) => String(x.rating) === filter) : items
-
-    const stars = (n) => '★'.repeat(n) + '☆'.repeat(5 - n)
 
     const cols = [
         { key: 'id', label: '#', render: (v) => <span style={{ color: '#94a3b8' }}>#{v}</span> },

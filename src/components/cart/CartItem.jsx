@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import {
     updateItemQuantityThunk,
     removeItemThunk,
-} from '../../redux/actions/cartAction'
+} from '../../redux/actions/user/cartAction'
 
 export default function CartItem({ item }) {
     //console.log(item)

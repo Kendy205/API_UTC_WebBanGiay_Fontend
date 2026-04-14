@@ -1,4 +1,4 @@
-﻿import { baseServices } from '../user/BaseService'
+﻿import { BaseServices } from '../BaseService'
 
 /**
  * AdminOrderAdminService
@@ -13,11 +13,11 @@
  *   â† { status: "Confirmed" | "Shipping" | "Completed" | "Cancelled" }
  *   â†’ { id, status }
  */
-class AdminOrderAdminService {
-    getAll = (params = {}) => baseServices.get('/api/Admin/orders', { params })
-    getById = (id) => baseServices.get(`/api/Admin/orders/${id}`)
+export class AdminOrderAdminService extends BaseServices {
+    getAll = (params = {}) => this.get('/api/Admin/orders', { params })
+    getById = (id) => this.get(`/api/Admin/orders/${id}`)
     updateStatus = (id, status) =>
-        baseServices.put(`/api/Admin/orders/${id}/status`, { status })
+        this.put(`/api/Admin/orders/${id}/status`, { status })
 }
 
 export const adminOrderAdminService = new AdminOrderAdminService()

@@ -80,14 +80,14 @@ function App() {
                             <Route path="products" element={<ProductsAdminPage />} />
                             <Route path="categories" element={<CategoriesPage />} />
                             <Route path="inventory" element={<InventoryPage />} />
-                            <Route path="promotions" element={<PromotionsPage />} />
+                            {/* <Route path="promotions" element={<PromotionsPage />} /> */}
                             <Route path="orders" element={<OrdersAdminPage />} />
                             <Route path="payments" element={<PaymentsPage />} />
                             <Route path="refunds" element={<RefundsPage />} />
                             <Route path="customers" element={<CustomersPage />} />
                             <Route path="reviews" element={<ReviewsAdminPage />} />
                             <Route path="settings" element={<SettingsPage />} />
-                            <Route path="logs" element={<LogsPage />} />
+                            {/* <Route path="logs" element={<LogsPage />} /> */}
                         </Route>
                     </Route>
 

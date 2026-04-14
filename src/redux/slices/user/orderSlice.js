@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { fetchAddressesThunk, addAddressThunk, createOrderThunk, fetchMyOrdersThunk, cancelOrderThunk, payVnpayThunk } from '../actions/orderAction'
+import { fetchAddressesThunk, addAddressThunk, createOrderThunk, fetchMyOrdersThunk, cancelOrderThunk, payVnpayThunk } from '../../actions/user/orderAction'
 
 const initialState = {
     // Danh sách địa chỉ
