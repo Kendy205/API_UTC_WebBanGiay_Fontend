@@ -13,14 +13,26 @@ export const fetchAdminCustomersThunk = createAsyncThunk(
     }
 )
 
-export const updateAdminCustomerStatusThunk = createAsyncThunk(
-    'adminCustomer/updateStatus',
-    async ({ id, isActive }, { rejectWithValue }) => {
+export const createAdminCustomerThunk = createAsyncThunk(
+    'adminCustomer/create',
+    async (data, { rejectWithValue }) => {
         try {
-            const res = await adminCustomerService.updateStatus(id, isActive)
+            const res = await adminCustomerService.create(data)
             return res.data?.data ?? res.data
         } catch (e) {
-            return rejectWithValue(e?.response?.data?.message ?? 'Lỗi cập nhật trạng thái')
+            return rejectWithValue(e?.response?.data?.message ?? 'Lỗi thêm khách hàng')
+        }
+    }
+)
+
+export const updateAdminCustomerThunk = createAsyncThunk(
+    'adminCustomer/update',
+    async ({ id, data }, { rejectWithValue }) => {
+        try {
+            const res = await adminCustomerService.update(id, data)
+            return res.data?.data ?? res.data
+        } catch (e) {
+            return rejectWithValue(e?.response?.data?.message ?? 'Lỗi cập nhật khách hàng')
         }
     }
 )
