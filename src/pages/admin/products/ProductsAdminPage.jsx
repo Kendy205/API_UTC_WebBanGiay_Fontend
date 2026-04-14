@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { message } from 'antd'
 import {
-    PageHeader, Btn, Table, SearchBar, Modal, FormField, Input, Select,
+    PageHeader, Btn, Table, SearchBar, Modal, FormField, Input, Select, Toggle,
     badge, fmt,
 } from '../adminShared'
 import Pagination from '../../../components/common/Pagination'
@@ -54,6 +54,7 @@ export default function ProductsAdminPage() {
         dispatch(fetchAdminCategoriesThunk())
         dispatch(fetchAdminBrandsThunk())
         dispatch(fetchAdminColorsThunk())
+        dispatch(fetchAdminSizesThunk())
     }, [dispatch])
 
     // Đồng bộ variantsList khi variantModalProduct thay đổi (khi Redux update hoặc khi mở modal)
@@ -169,20 +170,41 @@ export default function ProductsAdminPage() {
     }
 
     const handleDeleteRow = async (tempId, variantId) => {
-        if (!confirm('Bạn có chắc chắn muốn xóa biến thể này chứ?')) return;
+        if (!confirm('Bạn có chắc chắn muốn ẩn/xóa (ngưng hoạt động) biến thể này chứ?')) return;
 
         if (!variantId) {
             setVariantsList(p => p.filter(x => x._tempId !== tempId))
             return
         }
 
+        const row = variantsList.find(v => v.variantId === variantId)
+        if (!row) return;
+
+        const color = colors.find(c => String(c.colorId || c.id) === String(row.colorId));
+        const size = sizes.find(s => String(s.sizeId || s.id) === String(row.sizeId));
+
+        const payload = {
+            variantId: Number(variantId),
+            productId: variantModalProduct.productId,
+            colorId: Number(row.colorId),
+            sizeId: Number(row.sizeId),
+            sku: row.sku || '',
+            stockQuantity: Number(row.stockQuantity || 0),
+            priceOverride: row.priceOverride ? Number(row.priceOverride) : 0,
+            isActive: false, // Soft-delete
+            sizeLabel: size?.sizeLabel || size?.label || size?.name || row.sizeLabel || '',
+            sizeSystem: size?.sizeSystem || row.sizeSystem || '',
+            colorName: color?.colorName || color?.name || row.colorName || '',
+            productName: variantModalProduct.productName || ''
+        }
+
         try {
-            await dispatch(deleteAdminVariantThunk({ productId: variantModalProduct.productId, variantId })).unwrap()
-            setVariantsList(p => p.filter(x => x.variantId !== variantId))
-            message.success('Đã xóa biến thể!')
+            await dispatch(updateAdminVariantThunk({ productId: variantModalProduct.productId, variantId, data: payload })).unwrap()
+            setVariantsList(p => p.map(x => x.variantId === variantId ? { ...x, isActive: false } : x))
+            message.success('Đã ngưng hoạt động biến thể!')
             dispatch(fetchAdminProductsThunk({ page, pageSize }))
         } catch (error) {
-            message.error(error || 'Lỗi khi xóa biến thể!')
+            message.error(error || 'Lỗi khi thao tác!')
         }
     }
 
@@ -193,14 +215,22 @@ export default function ProductsAdminPage() {
             return;
         }
 
+        const color = colors.find(c => String(c.colorId || c.id) === String(row.colorId));
+        const size = sizes.find(s => String(s.sizeId || s.id) === String(row.sizeId));
+
         const payload = {
+            variantId: row._isNew ? 0 : Number(row.variantId),
             productId: variantModalProduct.productId,
             colorId: Number(row.colorId),
             sizeId: Number(row.sizeId),
             sku: row.sku || '',
             stockQuantity: Number(row.stockQuantity || 0),
-            priceOverride: row.priceOverride ? Number(row.priceOverride) : null,
-            isActive: row.isActive === undefined ? true : row.isActive
+            priceOverride: row.priceOverride ? Number(row.priceOverride) : 0,
+            isActive: row.isActive === undefined ? true : row.isActive,
+            sizeLabel: size?.sizeLabel || size?.label || size?.name || row.sizeLabel || '',
+            sizeSystem: size?.sizeSystem || row.sizeSystem || '',
+            colorName: color?.colorName || color?.name || row.colorName || '',
+            productName: variantModalProduct.productName || ''
         }
 
         try {
@@ -369,6 +399,11 @@ export default function ProductsAdminPage() {
                     </div>
                 </FormField>
                 <FormField label="Mô tả"><Input value={form.description || ''} onChange={f('description')} placeholder="Mô tả sản phẩm..." /></FormField>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '600', color: '#374151' }}>Trạng thái hiển thị:</span>
+                    <Toggle checked={form.isActive !== false} onChange={(v) => setForm(p => ({ ...p, isActive: v }))} />
+                    <span style={{ fontSize: '13px', color: form.isActive !== false ? '#10b981' : '#94a3b8' }}>{form.isActive !== false ? 'Hoạt động' : 'Đã ẩn'}</span>
+                </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
                     <Btn variant="secondary" onClick={() => setModal(null)}>Hủy bỏ</Btn>
@@ -389,25 +424,26 @@ export default function ProductsAdminPage() {
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(80px, 1fr) minmax(80px, 1fr) minmax(130px, 2fr) minmax(70px, 1fr) minmax(100px, 1.5fr) 110px', gap: '10px', padding: '0 12px', fontSize: '11px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(70px, 1fr) minmax(70px, 1fr) minmax(110px, 1.5fr) minmax(60px, 1fr) minmax(90px, 1.2fr) minmax(60px, 1fr) 110px', gap: '10px', padding: '0 12px', fontSize: '11px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>
                             <div>Màu sắc {variantsList.some(v => v._isEditing) && '*'}</div>
                             <div>Size {variantsList.some(v => v._isEditing) && '*'}</div>
                             <div>Mã SKU</div>
                             <div>Kho</div>
                             <div>Giá (Ngoại lệ)</div>
+                            <div style={{ textAlign: 'center' }}>Trạng thái</div>
                             <div style={{ textAlign: 'center' }}>Thao tác</div>
                         </div>
                         {variantsList.map((v) => (
-                            <div key={v._tempId} style={{ display: 'grid', gridTemplateColumns: 'minmax(80px, 1fr) minmax(80px, 1fr) minmax(130px, 2fr) minmax(70px, 1fr) minmax(100px, 1.5fr) 110px', gap: '10px', alignItems: 'center', padding: v._isEditing ? '12px' : '8px 12px', background: v._isEditing ? '#f8fafc' : '#fff', borderRadius: '8px', border: v._isEditing ? '1px solid #cbd5e1' : '1px solid #f1f5f9' }}>
+                            <div key={v._tempId} style={{ display: 'grid', gridTemplateColumns: 'minmax(70px, 1fr) minmax(70px, 1fr) minmax(110px, 1.5fr) minmax(60px, 1fr) minmax(90px, 1.2fr) minmax(60px, 1fr) 110px', gap: '10px', alignItems: 'center', padding: v._isEditing ? '12px' : '8px 12px', background: v._isEditing ? '#f8fafc' : '#fff', borderRadius: '8px', border: v._isEditing ? '1px solid #cbd5e1' : '1px solid #f1f5f9' }}>
 
                                 {v._isEditing ? (
-                                    <Select value={String(v.colorId || '')} onChange={(val) => updateVariantTemp(v._tempId, 'colorId', val)} options={[{ value: '', label: 'Chọn' }, ...colors.map(c => ({ value: String(c.id), label: c.name }))]} />
+                                    <Select value={String(v.colorId || '')} onChange={(val) => updateVariantTemp(v._tempId, 'colorId', val)} options={[{ value: '', label: 'Chọn' }, ...colors.map(c => ({ value: String(c.colorId || c.id), label: c.colorName || c.name }))]} />
                                 ) : (
                                     <span style={{ fontSize: '13px', color: '#334155' }}>{v.colorName || '—'}</span>
                                 )}
 
                                 {v._isEditing ? (
-                                    <Select value={String(v.sizeId || '')} onChange={(val) => updateVariantTemp(v._tempId, 'sizeId', val)} options={[{ value: '', label: 'Chọn' }, ...sizes.map(s => ({ value: String(s.id), label: s.label }))]} />
+                                    <Select value={String(v.sizeId || '')} onChange={(val) => updateVariantTemp(v._tempId, 'sizeId', val)} options={[{ value: '', label: 'Chọn' }, ...sizes.map(s => ({ value: String(s.sizeId || s.id), label: s.sizeLabel || s.label || s.sizeName || s.name }))]} />
                                 ) : (
                                     <span style={{ fontSize: '13px', color: '#334155' }}>{v.sizeLabel || '—'}</span>
                                 )}
@@ -429,6 +465,14 @@ export default function ProductsAdminPage() {
                                 ) : (
                                     <span style={{ fontSize: '13px', color: '#64748b' }}>{v.priceOverride ? fmt(v.priceOverride) : 'Mặc định'}</span>
                                 )}
+
+                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                    {v._isEditing ? (
+                                        <Toggle checked={v.isActive !== false} onChange={(val) => updateVariantTemp(v._tempId, 'isActive', val)} />
+                                    ) : (
+                                        <span style={{ fontSize: '13px', color: v.isActive !== false ? '#10b981' : '#94a3b8' }}>{v.isActive !== false ? 'Hiện' : 'Ẩn'}</span>
+                                    )}
+                                </div>
 
                                 <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
                                     {v._isEditing ? (

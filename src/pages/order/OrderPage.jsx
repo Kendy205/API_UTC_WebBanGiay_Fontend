@@ -76,6 +76,23 @@ export default function OrderPage() {
 
     const totalQty = items.reduce((s, x) => s + (x.quantity || 0), 0)
 
+    const formatPrice = (amount) => amount != null
+        ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
+        : null
+
+    const totalItemPrice = items.reduce((s, item) => {
+        let price = item.unitPrice ?? item.price;
+        if (price == null || price === 0) {
+            price = (item.priceOverride > 0) 
+                ? item.priceOverride 
+                : ((item.salePrice > 0) ? item.salePrice : item.basePrice) ?? 0;
+        }
+        return s + price * (item.quantity || 1);
+    }, 0);
+
+    const shippingFee = 30000;
+    const finalTotal = totalItemPrice + shippingFee;
+
     // Kiểm tra địa chỉ hợp lệ dựa theo tab đang chọn
     const isAddressReady =
         addressTab === TAB_SAVED
@@ -134,9 +151,7 @@ export default function OrderPage() {
 
     /* ── Đặt hàng thành công ── */
     if (orderSuccess) {
-        const fmt = (n) => n != null
-            ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n)
-            : null
+        const fmt = formatPrice
 
         const STATUS_MAP = {
             Pending: { label: 'Chờ xác nhận', color: 'bg-amber-100 text-amber-700 border-amber-200' },
@@ -377,10 +392,22 @@ export default function OrderPage() {
                             ))}
                         </div>
 
-                        <div className="mt-4 border-t border-neutral-200 pt-3 text-sm text-neutral-700">
+                        <div className="mt-4 border-t border-neutral-200 pt-3 text-sm text-neutral-700 space-y-2">
                             <div className="flex justify-between">
                                 <span>Tổng số lượng</span>
                                 <span className="font-semibold">{totalQty} sản phẩm</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Tiền hàng</span>
+                                <span className="font-medium text-neutral-900">{formatPrice(totalItemPrice)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Phí vận chuyển</span>
+                                <span className="font-medium text-neutral-900">{formatPrice(shippingFee)}</span>
+                            </div>
+                            <div className="flex justify-between border-t border-neutral-100 pt-2 mt-2 text-base">
+                                <span className="font-semibold text-neutral-900">Tổng thanh toán</span>
+                                <span className="font-bold text-indigo-600">{formatPrice(finalTotal)}</span>
                             </div>
                         </div>
 

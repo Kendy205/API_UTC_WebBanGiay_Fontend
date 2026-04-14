@@ -1,5 +1,7 @@
 export const EMPTY = {
-    name: '',
-    description: '',
+    categoryId: 0,
+    categoryName: '',
+    slug: '',
+    parentId: 0,
     isActive: true,
 }

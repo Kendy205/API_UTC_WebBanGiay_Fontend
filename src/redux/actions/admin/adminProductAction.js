@@ -57,7 +57,7 @@ export const deleteAdminProductThunk = createAsyncThunk(
 
 export const createAdminVariantThunk = createAsyncThunk(
     'adminProduct/createVariant',
-    async ({ productId, ...data }, { rejectWithValue }) => {
+    async ({ productId, data }, { rejectWithValue }) => {
         try {
             const res = await adminProductService.createVariant({ productId, ...data })
             return { productId, variant: res.data?.data ?? res.data }
@@ -69,7 +69,7 @@ export const createAdminVariantThunk = createAsyncThunk(
 
 export const updateAdminVariantThunk = createAsyncThunk(
     'adminProduct/updateVariant',
-    async ({ productId, variantId, ...data }, { rejectWithValue }) => {
+    async ({ productId, variantId, data }, { rejectWithValue }) => {
         try {
             const res = await adminProductService.updateVariant(variantId, { productId, ...data })
             return { productId, variant: res.data?.data ?? res.data }

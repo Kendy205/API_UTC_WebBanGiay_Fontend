@@ -26,7 +26,8 @@ export default function ProductCard({ product }) {
     const brandName = product.brandName ?? ''
     const image = product.image ?? 'https://placehold.co/600x400?text=No+Image'
 
-    const displayPrice = product.salePrice ?? product.basePrice
+    const displayPrice = (product.salePrice > 0) ? product.salePrice : product.basePrice
+    const hasDiscount = product.basePrice != null && product.basePrice > 0 && displayPrice < product.basePrice
     const formatPrice = (amount) => amount != null ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount) : null
 
     return (
@@ -69,8 +70,20 @@ export default function ProductCard({ product }) {
 
             <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
                 {displayPrice != null ? (
-                    <div className="font-extrabold text-indigo-600 text-[15px]">
-                        {formatPrice(displayPrice)}
+                    <div className="flex flex-col">
+                        <div className="font-extrabold text-indigo-600 text-[15px]">
+                            {formatPrice(displayPrice)}
+                        </div>
+                        {hasDiscount && (
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="text-xs text-slate-400 line-through">
+                                    {formatPrice(product.basePrice)}
+                                </span>
+                                <span className="rounded bg-red-50 px-1 py-0.5 text-[10px] font-bold text-red-600">
+                                    -{Math.round((1 - displayPrice / product.basePrice) * 100)}%
+                                </span>
+                            </div>
+                        )}
                     </div>
                 ) : <div/>}
                 

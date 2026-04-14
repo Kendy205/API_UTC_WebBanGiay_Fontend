@@ -58,9 +58,9 @@ export const updateItemQuantityThunk = createAsyncThunk(
  */
 export const removeItemThunk = createAsyncThunk(
     'cart/removeItemThunk',
-    async (variantId, { dispatch, rejectWithValue }) => {
+    async ({ cartItemId }, { dispatch, rejectWithValue }) => {
         try {
-            const res = await cartService.removeItem(variantId)
+            const res = await cartService.removeItem(cartItemId)
             // Trả về trực tiếp mảng items mới
             return res.data?.data?.items ?? []
         } catch (error) {

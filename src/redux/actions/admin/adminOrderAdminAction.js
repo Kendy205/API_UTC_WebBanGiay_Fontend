@@ -13,14 +13,38 @@ export const fetchAdminOrdersThunk = createAsyncThunk(
     }
 )
 
-export const updateAdminOrderStatusThunk = createAsyncThunk(
-    'adminOrderAdmin/updateStatus',
-    async ({ id, status }, { rejectWithValue }) => {
+export const fetchAdminOrderByIdThunk = createAsyncThunk(
+    'adminOrderAdmin/fetchById',
+    async (id, { rejectWithValue }) => {
         try {
-            const res = await adminOrderAdminService.updateStatus(id, status)
+            const res = await adminOrderAdminService.getById(id)
             return res.data?.data ?? res.data
         } catch (e) {
-            return rejectWithValue(e?.response?.data?.message ?? 'Lỗi cập nhật trạng thái')
+            return rejectWithValue(e?.response?.data?.message ?? 'Lỗi tải chi tiết đơn hàng')
+        }
+    }
+)
+
+export const updateAdminOrderThunk = createAsyncThunk(
+    'adminOrderAdmin/update',
+    async ({ id, data }, { rejectWithValue }) => {
+        try {
+            const res = await adminOrderAdminService.update(id, data)
+            return res.data?.data ?? res.data
+        } catch (e) {
+            return rejectWithValue(e?.response?.data?.message ?? 'Lỗi cập nhật đơn hàng')
+        }
+    }
+)
+
+export const deleteAdminOrderThunk = createAsyncThunk(
+    'adminOrderAdmin/delete',
+    async (id, { rejectWithValue }) => {
+        try {
+            await adminOrderAdminService.remove(id)
+            return id
+        } catch (e) {
+            return rejectWithValue(e?.response?.data?.message ?? 'Lỗi xóa đơn hàng')
         }
     }
 )

@@ -42,12 +42,18 @@ export default function CartItem({ item }) {
     const handleRemove = async (e) => {
         e.stopPropagation()
         setIsLoading(true)
-        await dispatch(removeItemThunk(item.variantId)).unwrap().catch(() => { })
+        await dispatch(removeItemThunk({ cartItemId: item.cartItemId })).unwrap().catch(() => { })
         setIsLoading(false)
     }
 
     const formatPrice = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
-    const itemPrice = item.unitPrice ?? item.price ?? item.priceOverride ?? item.salePrice ?? item.basePrice ?? 0;
+    
+    let itemPrice = item.unitPrice ?? item.price;
+    if (itemPrice == null || itemPrice === 0) {
+        itemPrice = (item.priceOverride > 0) 
+            ? item.priceOverride 
+            : ((item.salePrice > 0) ? item.salePrice : item.basePrice) ?? 0;
+    }
 
     const canNavigate = item.productId && item.productId > 0
 

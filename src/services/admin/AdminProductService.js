@@ -35,9 +35,9 @@ export class AdminProductService extends BaseServices {
         this.delete(`/api/Admin/products/${id}`)
 
     // Variants
-    createVariant = (data) => this.post('/api/Variant', data)
-    updateVariant = (id, data) => this.put(`/api/Variant/${id}`, data)
-    removeVariant = (id) => this.delete(`/api/Variant/${id}`)
+    createVariant = (data) => this.post('/api/ProductVariant', data)
+    updateVariant = (id, data) => this.put(`/api/ProductVariant/${id}`, data)
+    removeVariant = (id) => this.delete(`/api/ProductVariant/${id}`)
 
     // Attributes
     getColors = () => this.get('/api/Color')

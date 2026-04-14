@@ -7,9 +7,6 @@ import VariantSelector from './VariantSelector'
 import { getProductReviewsThunk } from '../../redux/actions/user/reviewAction'
 import ProductReviews from './ProductReviews'
 
-
-
-
 /**
  * ProductDetail
  * Gọi API getProductById để lấy toàn bộ thông tin sản phẩm + variants.
@@ -29,6 +26,7 @@ export default function ProductDetail() {
     const [product, setProduct] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [activeVariant, setActiveVariant] = useState(null)
 
     useEffect(() => {
         let ignore = false
@@ -99,8 +97,13 @@ export default function ProductDetail() {
             ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
             : null
 
-    const displayPrice = salePrice ?? basePrice
-    const hasDiscount = salePrice != null && basePrice != null && salePrice < basePrice
+    // Bắt đúng logic: NẾU có biến thể và giá ghi đè > 0 thì xài nó.
+    // NẾU không có (hoặc người dùng mới vào) thì xài salePrice > 0. Nếu không có nốt salePrice thì xài basePrice.
+    const displayPrice = (activeVariant && activeVariant.priceOverride > 0) 
+        ? activeVariant.priceOverride 
+        : (salePrice > 0 ? salePrice : basePrice)
+        
+    const hasDiscount = basePrice != null && basePrice > 0 && displayPrice < basePrice
 
     return (
         <div className="rounded-lg border bg-white p-6 shadow-sm">
@@ -151,7 +154,7 @@ export default function ProductDetail() {
                                 {formatPrice(basePrice)}
                             </span>
                             <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">
-                                -{Math.round((1 - salePrice / basePrice) * 100)}%
+                                -{Math.round((1 - displayPrice / basePrice) * 100)}%
                             </span>
                         </>
                     )}
@@ -168,7 +171,7 @@ export default function ProductDetail() {
             <hr className="mb-5 border-neutral-200" />
 
             {/* ── Chọn biến thể ── */}
-            <VariantSelector variants={variants} baseProduct={product} />
+            <VariantSelector variants={variants} baseProduct={product} onVariantChange={setActiveVariant} />
 
             {/* ── Danh sách đánh giá ── */}
             <ProductReviews productId={productId} />
