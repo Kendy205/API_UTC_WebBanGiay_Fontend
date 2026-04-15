@@ -31,6 +31,7 @@ import CustomersPage from './pages/admin/customers/CustomersPage'
 import ReviewsAdminPage from './pages/admin/reviews/ReviewsAdminPage'
 import SettingsPage from './pages/admin/settings/SettingsPage'
 import LogsPage from './pages/admin/logs/LogsPage'
+import MapboxAddressPicker from './components/map/MapboxAddressPicker'
 
 function App() {
     return (
@@ -38,10 +39,9 @@ function App() {
             <Provider store={store}>
                 <Loading />
                 <Routes>
-
+                    <Route path='/map' element={<MapboxAddressPicker></MapboxAddressPicker>}></Route>
                     <Route path="/login" element={<LoginForm />} />
                     <Route path="/register" element={<RegisterForm />} />
-
                     <Route path="" element={<UserTemplate />}>
                         <Route path="/" element={<HomePage />} />
                         <Route path="/home" element={<HomePage />} />
@@ -63,8 +63,6 @@ function App() {
                         {/* Kết quả thanh toán VNPay — không yêu cầu đăng nhập vì VNPay redirect */}
                         <Route path="/vnpay-return" element={<VnpayReturnPage />} />
                     </Route>
-
-
                     {/* Auth: ADMIN */}
                     <Route
                         element={
@@ -90,7 +88,6 @@ function App() {
                             {/* <Route path="logs" element={<LogsPage />} /> */}
                         </Route>
                     </Route>
-
 
                 </Routes>
             </Provider>

@@ -10,7 +10,7 @@ export default function CartPage() {
     const navigate = useNavigate()
     const { items, loading, actionLoading } = useSelector((s) => s.cart)
 
-    console.log(items)
+    //console.log(items)
     useEffect(() => {
         dispatch(fetchCartThunk())
 
