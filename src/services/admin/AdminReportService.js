@@ -1,4 +1,4 @@
-﻿import { baseServices } from '../user/BaseService'
+import { baseServices } from '../user/BaseService'
 
 /**
  * AdminReportService
@@ -8,7 +8,7 @@
  */
 class AdminReportService {
     getSalesReport = (params = {}) =>
-        baseServices.get('/api/Admin/reports/sales', { params })
+        baseServices.get('/api/Reports/sales', { params })
 }
 
 export const adminReportService = new AdminReportService()

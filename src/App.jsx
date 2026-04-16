@@ -30,7 +30,6 @@ import RefundsPage from './pages/admin/refunds/RefundsPage'
 import CustomersPage from './pages/admin/customers/CustomersPage'
 import ReviewsAdminPage from './pages/admin/reviews/ReviewsAdminPage'
 import SettingsPage from './pages/admin/settings/SettingsPage'
-import LogsPage from './pages/admin/logs/LogsPage'
 
 function App() {
     return (
@@ -87,7 +86,7 @@ function App() {
                             <Route path="customers" element={<CustomersPage />} />
                             <Route path="reviews" element={<ReviewsAdminPage />} />
                             <Route path="settings" element={<SettingsPage />} />
-                            <Route path="logs" element={<LogsPage />} />
+                            {/* <Route path="logs" element={<LogsPage />} /> */}
                         </Route>
                     </Route>
 
