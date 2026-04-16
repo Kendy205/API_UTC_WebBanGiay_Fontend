@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import { orderService } from '../../services/user/OrderService'
+import { orderService } from '../../../services/user/OrderService'
 import { fetchCartThunk } from './cartAction'
 
 /**
@@ -18,6 +18,26 @@ export const addAddressThunk = createAsyncThunk(
                 error?.response?.data?.message ??
                 error.message ??
                 'Không thể thêm địa chỉ.'
+            )
+        }
+    }
+)
+
+/**
+ * deleteAddressThunk – soft delete bằng PUT isDelete: true
+ */
+export const deleteAddressThunk = createAsyncThunk(
+    'order/deleteAddress',
+    async ({ addressId, addressData }, { dispatch, rejectWithValue }) => {
+        try {
+            await orderService.softDeleteAddress(addressId, addressData)
+            dispatch(fetchAddressesThunk())
+            return addressId
+        } catch (error) {
+            return rejectWithValue(
+                error?.response?.data?.message ??
+                error.message ??
+                'Không thể xóa địa chỉ.'
             )
         }
     }
@@ -124,7 +144,7 @@ export const cancelOrderThunk = createAsyncThunk(
     'order/cancelOrder',
     async ({ orderId }, { dispatch, rejectWithValue }) => {
         try {
-            const response = await orderService.cancelOrder({ orderId })
+            const response = await orderService.cancelOrder(orderId)
             dispatch(fetchMyOrdersThunk())
             return response.data?.data ?? response.data
         } catch (error) {

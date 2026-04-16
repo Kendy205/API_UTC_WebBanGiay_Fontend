@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import { reviewService } from '../../services/user/ReviewService'
+import { reviewService } from '../../../services/user/ReviewService'
 
 export const getProductReviewsThunk = createAsyncThunk(
     'review/getProductReviews',

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux';
-import { getProducts } from '../../redux/actions/ProductAction';
+import { getProducts } from '../../redux/actions/user/ProductAction';
 import ProductCard from './ProductCard';
 import Skeleton from '../loading/Skeleton';
 import Pagination from '../common/Pagination';

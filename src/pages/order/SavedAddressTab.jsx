@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { addAddressThunk } from '../../redux/actions/orderAction'
+import { addAddressThunk, deleteAddressThunk } from '../../redux/actions/user/orderAction'
 
 export default function SavedAddressTab({ selectedAddressId, setSelectedAddressId }) {
     const dispatch = useDispatch()
     const { addresses, addressLoading, addressError, addingAddress, addAddressError } = useSelector((s) => s.order)
 
     const [showAddForm, setShowAddForm] = useState(false)
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+    const [deleting, setDeleting] = useState(false)
     const [newAddressForm, setNewAddressForm] = useState({
         recipientName: '',
         phone: '',
@@ -42,11 +44,21 @@ export default function SavedAddressTab({ selectedAddressId, setSelectedAddressI
         }
     }
 
+    const handleDeleteConfirm = async () => {
+        if (!confirmDeleteId) return
+        setDeleting(true)
+        await dispatch(deleteAddressThunk({ addressId: confirmDeleteId.id, addressData: confirmDeleteId.data }))
+        setDeleting(false)
+        setConfirmDeleteId(null)
+        if (selectedAddressId === confirmDeleteId.id) setSelectedAddressId(null)
+    }
+
     if (addressLoading) {
         return <p className="text-sm text-neutral-500">Đang tải địa chỉ…</p>
     }
 
     return (
+        <>
         <div className="space-y-4">
             {addressError && !showAddForm && addresses.length > 0 && (
                 <p className="text-sm text-red-600">{addressError}</p>
@@ -117,11 +129,25 @@ export default function SavedAddressTab({ selectedAddressId, setSelectedAddressI
                         return (
                             <label
                                 key={addr.addressId}
-                                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition ${isSelected
+                                className={`relative flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition ${isSelected
                                     ? 'border-neutral-900 bg-neutral-50 ring-1 ring-neutral-900'
                                     : 'border-neutral-200 hover:border-neutral-400'
                                     }`}
                             >
+                                {/* Nút xóa góc trên phải */}
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        setConfirmDeleteId({ id: addr.addressId, data: addr })
+                                    }}
+                                    className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full text-neutral-400 hover:bg-red-50 hover:text-red-500 transition"
+                                    title="Xóa địa chỉ"
+                                >
+                                    ✕
+                                </button>
+
                                 <input
                                     type="radio"
                                     name="address"
@@ -130,7 +156,7 @@ export default function SavedAddressTab({ selectedAddressId, setSelectedAddressI
                                     onChange={() => setSelectedAddressId(addr.addressId)}
                                     className="mt-1 accent-neutral-900"
                                 />
-                                <div className="text-sm">
+                                <div className="text-sm pr-4">
                                     <div className="font-semibold text-neutral-900">
                                         {addr.recipientName}
                                         {addr.isDefault && (
@@ -157,5 +183,43 @@ export default function SavedAddressTab({ selectedAddressId, setSelectedAddressI
                 </div>
             )}
         </div>
+
+            {/* Modal xác nhận xóa */}
+            {confirmDeleteId && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+                    onClick={() => !deleting && setConfirmDeleteId(null)}
+                >
+                    <div
+                        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="text-base font-semibold text-neutral-900 mb-2">Xóa địa chỉ?</h3>
+                        <p className="text-sm text-neutral-600 mb-5">
+                            Bạn có chắc muốn xóa địa chỉ này không? Hành động này không thể hoàn tác.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                disabled={deleting}
+                                onClick={handleDeleteConfirm}
+                                className="flex-1 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 transition disabled:opacity-50"
+                            >
+                                {deleting ? 'Đang xóa...' : 'Xóa'}
+                            </button>
+                            <button
+                                type="button"
+                                disabled={deleting}
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition disabled:opacity-50"
+                            >
+                                Hủy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     )
 }

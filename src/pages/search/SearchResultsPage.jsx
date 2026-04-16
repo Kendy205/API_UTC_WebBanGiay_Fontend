@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { filterProductsThunk } from '../../redux/actions/ProductAction'
+import { filterProductsThunk } from '../../redux/actions/user/ProductAction'
 import ProductCard from '../../components/shoes/ProductCard'
 import Skeleton from '../../components/loading/Skeleton'
 import Pagination from '../../components/common/Pagination'

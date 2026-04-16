@@ -1,55 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { getProductById } from '../../redux/actions/ProductAction'
+import { getProductById } from '../../redux/actions/user/ProductAction'
 import Skeleton from '../loading/Skeleton'
 import VariantSelector from './VariantSelector'
-import { getProductReviewsThunk } from '../../redux/actions/reviewAction'
-
-function ProductReviews({ productId }) {
-    const dispatch = useDispatch()
-    const { reviews, loadingReviews: loading } = useSelector(state => state.review)
-
-    useEffect(() => {
-        if (productId) {
-            dispatch(getProductReviewsThunk(productId))
-        }
-    }, [productId, dispatch])
-
-    if (loading) return <div className="mt-8 text-neutral-500">Đang tải đánh giá...</div>
-
-    return (
-        <div className="mt-8 pt-8 border-t border-neutral-200">
-            <h3 className="text-lg font-semibold text-neutral-900 mb-4">Đánh giá sản phẩm ({reviews.length})</h3>
-            {reviews.length === 0 ? (
-                <p className="text-sm text-neutral-500">Chưa có đánh giá nào cho sản phẩm này.</p>
-            ) : (
-                <div className="space-y-4">
-                    {reviews.map((r, idx) => (
-                        <div key={idx} className="bg-neutral-50 p-4 rounded-lg">
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="flex text-yellow-400 text-sm">
-                                    {Array.from({ length: 5 }).map((_, i) => (
-                                        <span key={i}>{i < r.rating ? '★' : '☆'}</span>
-                                    ))}
-                                </div>
-                                {r.username && <span className="font-medium text-sm ml-2">{r.username}</span>}
-                                {r.createdAt && <span className="text-xs text-neutral-400 ml-auto">{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span>}
-                            </div>
-                            {(r.colorName || r.sizeLabel) && (
-                                <div className="text-xs text-neutral-500 mb-2 inline-block bg-neutral-200 px-2 py-0.5 rounded">
-                                    Phân loại: {r.colorName} {r.sizeLabel && `- Size: ${r.sizeLabel}`}
-                                </div>
-                            )}
-                            <p className="text-sm text-neutral-700">{r.reviewContent}</p>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    )
-}
-
+import { getProductReviewsThunk } from '../../redux/actions/user/reviewAction'
+import ProductReviews from './ProductReviews'
 
 /**
  * ProductDetail
@@ -70,6 +26,7 @@ export default function ProductDetail() {
     const [product, setProduct] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [activeVariant, setActiveVariant] = useState(null)
 
     useEffect(() => {
         let ignore = false
@@ -140,79 +97,94 @@ export default function ProductDetail() {
             ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
             : null
 
-    const displayPrice = salePrice ?? basePrice
-    const hasDiscount = salePrice != null && basePrice != null && salePrice < basePrice
+    // Bắt đúng logic: NẾU có biến thể và giá ghi đè > 0 thì xài nó.
+    // NẾU không có (hoặc người dùng mới vào) thì xài salePrice > 0. Nếu không có nốt salePrice thì xài basePrice.
+    const displayPrice = (activeVariant && activeVariant.priceOverride > 0) 
+        ? activeVariant.priceOverride 
+        : (salePrice > 0 ? salePrice : basePrice)
+        
+    const hasDiscount = basePrice != null && basePrice > 0 && displayPrice < basePrice
 
     return (
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
+        <div className="rounded-lg border bg-white shadow-sm p-6">
+            
+            {/* ── Khu vực chi tiết sản phẩm ── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                {/* ── Cột Trái: Ảnh sản phẩm ── */}
+                <div>
+                    <img
+                        src={image ?? 'https://placehold.co/800x800?text=No+Image'}
+                        alt={productName}
+                        className="w-full rounded-lg object-contain bg-neutral-50 border border-neutral-100"
+                        style={{ height: '450px' }}
+                    />
+                </div>
 
-            {/* ── Ảnh sản phẩm ── */}
-            <img
-                src={image ?? 'https://placehold.co/800x600?text=No+Image'}
-                alt={productName}
-                className="mb-5 w-full rounded-lg object-cover bg-neutral-100"
-                style={{ maxHeight: 360 }}
-            />
+                {/* ── Cột Phải: Thông tin & Đặt hàng ── */}
+                <div className="flex flex-col">
+                    {/* ── Header ── */}
+                    <div className="mb-1 flex items-start justify-between gap-3">
+                        <h1 className="text-xl font-semibold text-neutral-900">
+                            {productName ?? `Sản phẩm #${productId}`}
+                        </h1>
+                        {pid != null && (
+                            <span className="shrink-0 rounded bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600">
+                                #{pid}
+                            </span>
+                        )}
+                    </div>
 
-            {/* ── Header ── */}
-            <div className="mb-1 flex items-start justify-between gap-3">
-                <h1 className="text-xl font-semibold text-neutral-900">
-                    {productName ?? `Sản phẩm #${productId}`}
-                </h1>
-                {pid != null && (
-                    <span className="shrink-0 rounded bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600">
-                        #{pid}
-                    </span>
-                )}
+                    {/* Slug */}
+                    {slug && (
+                        <p className="mb-2 text-xs text-neutral-400">/{slug}</p>
+                    )}
+
+                    {/* ── Meta: hãng & danh mục ── */}
+                    {(brandName || categoryName) && (
+                        <p className="mb-3 text-sm text-neutral-500">
+                            {brandName && <span>Hãng: <span className="font-medium text-neutral-700">{brandName}</span></span>}
+                            {brandName && categoryName && <span className="mx-2">•</span>}
+                            {categoryName && <span>Danh mục: <span className="font-medium text-neutral-700">{categoryName}</span></span>}
+                        </p>
+                    )}
+
+                    {/* ── Giá ── */}
+                    {displayPrice != null && (
+                        <div className="mb-4 flex items-baseline gap-3">
+                            <span className="text-2xl font-bold text-neutral-900">
+                                {formatPrice(displayPrice)}
+                            </span>
+                            {hasDiscount && (
+                                <>
+                                    <span className="text-sm text-neutral-400 line-through">
+                                        {formatPrice(basePrice)}
+                                    </span>
+                                    <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">
+                                        -{Math.round((1 - displayPrice / basePrice) * 100)}%
+                                    </span>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ── Mô tả ── */}
+                    {description && (
+                        <p className="mb-6 text-sm leading-relaxed text-neutral-600 border-b border-neutral-100 pb-6">
+                            {description}
+                        </p>
+                    )}
+
+                    {/* ── Chọn biến thể ── */}
+                    <div className="mt-8">
+                        <VariantSelector variants={variants} baseProduct={product} onVariantChange={setActiveVariant} />
+                    </div>
+                </div>
             </div>
 
-            {/* Slug */}
-            {slug && (
-                <p className="mb-2 text-xs text-neutral-400">/{slug}</p>
-            )}
-
-            {/* ── Meta: hãng & danh mục ── */}
-            {(brandName || categoryName) && (
-                <p className="mb-3 text-sm text-neutral-500">
-                    {brandName && <span>Hãng: <span className="font-medium text-neutral-700">{brandName}</span></span>}
-                    {brandName && categoryName && <span className="mx-2">•</span>}
-                    {categoryName && <span>Danh mục: <span className="font-medium text-neutral-700">{categoryName}</span></span>}
-                </p>
-            )}
-
-            {/* ── Giá ── */}
-            {displayPrice != null && (
-                <div className="mb-4 flex items-baseline gap-3">
-                    <span className="text-2xl font-bold text-neutral-900">
-                        {formatPrice(displayPrice)}
-                    </span>
-                    {hasDiscount && (
-                        <>
-                            <span className="text-sm text-neutral-400 line-through">
-                                {formatPrice(basePrice)}
-                            </span>
-                            <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">
-                                -{Math.round((1 - salePrice / basePrice) * 100)}%
-                            </span>
-                        </>
-                    )}
-                </div>
-            )}
-
-            {/* ── Mô tả ── */}
-            {description && (
-                <p className="mb-5 text-sm leading-relaxed text-neutral-600">
-                    {description}
-                </p>
-            )}
-
-            <hr className="mb-5 border-neutral-200" />
-
-            {/* ── Chọn biến thể ── */}
-            <VariantSelector variants={variants} baseProduct={product} />
-
-            {/* ── Danh sách đánh giá ── */}
-            <ProductReviews productId={pid} />
+            {/* ── Khu vực đánh giá ── */}
+            <div className="mt-8 pt-6 border-t border-neutral-200">
+                <ProductReviews productId={productId} />
+            </div>
         </div>
     )
 }

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { fetchMyOrdersThunk, cancelOrderThunk } from '../../redux/actions/orderAction'
-import { createReviewThunk } from '../../redux/actions/reviewAction'
+import { message } from 'antd'
+import { fetchMyOrdersThunk, cancelOrderThunk } from '../../redux/actions/user/orderAction'
+import { createReviewThunk } from '../../redux/actions/user/reviewAction'
 import Pagination from '../../components/common/Pagination'
 import HistoryOrderItem from './HistoryOrderItem'
 
@@ -72,11 +73,11 @@ export default function OrderHistoryPage() {
                 reviewContent: reviewContent
             }
             await dispatch(createReviewThunk(payload)).unwrap()
-            alert('Cảm ơn bạn đã gửi đánh giá!')
+            message.success('Cảm ơn bạn đã gửi đánh giá!')
             closeReviewModal()
         } catch (err) {
             console.error('Lỗi gửi đánh giá', err)
-            alert(err || 'Đã có lỗi xảy ra khi gửi đánh giá.')
+            message.error(typeof err === 'string' ? err : 'Đã có lỗi xảy ra khi gửi đánh giá.')
         }
     }
 
@@ -156,10 +157,15 @@ export default function OrderHistoryPage() {
                                     <p className="text-sm text-neutral-500">Mã đơn hàng: <span className="font-semibold text-neutral-900">{order.orderCode}</span></p>
                                     <p className="text-sm text-neutral-500">Ngày đặt: {formatDate(order.createdAt)}</p>
                                 </div>
-                                <div className="text-right">
-                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${order.orderStatus === 'pending' ? 'bg-orange-100 text-orange-700' :
-                                        order.orderStatus === 'completed' ? 'bg-green-100 text-green-700' :
-                                            order.orderStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                <div className="text-right space-y-2">
+                                    {order.paymentStatus && (
+                                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mr-2 ${order.paymentStatus.toLowerCase() === 'paid' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                            {order.paymentStatus.toLowerCase() === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                                        </span>
+                                    )}
+                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${order.orderStatus?.toLowerCase() === 'pending' ? 'bg-orange-100 text-orange-700' :
+                                        order.orderStatus?.toLowerCase() === 'completed' ? 'bg-green-100 text-green-700' :
+                                            order.orderStatus?.toLowerCase() === 'cancelled' ? 'bg-red-100 text-red-700' :
                                                 'bg-blue-100 text-blue-700'
                                         }`}>
                                         {getStatusText(order.orderStatus)}
@@ -170,13 +176,16 @@ export default function OrderHistoryPage() {
                             {/* Order Items */}
                             <div className="p-6">
                                 <div className="space-y-4">
-                                    {order.orderItems?.map((item) => (
-                                        <HistoryOrderItem
-                                            key={item.orderItemId}
-                                            item={item}
-                                            openReviewModal={openReviewModal}
-                                        />
-                                    ))}
+                                    {order.orderItems?.map((item) => {
+                                        const isPaid = order.paymentStatus?.toLowerCase() === 'paid' || order.orderStatus?.toLowerCase() === 'completed';
+                                        return (
+                                            <HistoryOrderItem
+                                                key={item.orderItemId}
+                                                item={item}
+                                                openReviewModal={isPaid ? openReviewModal : null}
+                                            />
+                                        );
+                                    })}
                                 </div>
                             </div>
 

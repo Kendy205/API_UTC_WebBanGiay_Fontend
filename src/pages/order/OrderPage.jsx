@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { fetchAddressesThunk, createOrderThunk, payVnpayThunk } from '../../redux/actions/orderAction'
-import { resetOrderState } from '../../redux/slices/orderSlice'
-import GoongAddressPicker from '../../components/map/GoongAddressPicker'
+import { fetchAddressesThunk, createOrderThunk, payVnpayThunk } from '../../redux/actions/user/orderAction'
+import { resetOrderState } from '../../redux/slices/user/orderSlice'
+import MapboxAddressPicker from '../../components/map/MapboxAddressPicker'
 import SavedAddressTab from './SavedAddressTab'
 
 const PAYMENT_METHODS = [
@@ -34,9 +34,8 @@ export default function OrderPage() {
 
     // Tab: 'saved' = địa chỉ đã lưu, 'map' = nhập địa chỉ mới qua bản đồ
     const [addressTab, setAddressTab] = useState(TAB_SAVED)
-    // Địa chỉ được chọn từ bản đồ Goong
-    const [mapAddress, setMapAddress] = useState(null) // { address, lat, lng }
-
+    // Địa chỉ được chọn từ bản đồ Mapbox
+    const [mapAddress, setMapAddress] = useState(null) // { address, lat, lng, distanceKm, shippingFee }
 
 
     // ── Guards ───────────────────────────────────────────────────
@@ -76,6 +75,26 @@ export default function OrderPage() {
 
     const totalQty = items.reduce((s, x) => s + (x.quantity || 0), 0)
 
+    const formatPrice = (amount) => amount != null
+        ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
+        : null
+
+    const totalItemPrice = items.reduce((s, item) => {
+        let price = item.unitPrice ?? item.price;
+        if (price == null || price === 0) {
+            price = (item.priceOverride > 0)
+                ? item.priceOverride
+                : ((item.salePrice > 0) ? item.salePrice : item.basePrice) ?? 0;
+        }
+        return s + price * (item.quantity || 1);
+    }, 0);
+
+    // Phí ship: nếu đang ở tab bản đồ dùng phí tính từ khoảng cách, ngược lại dùng mặc định 30k
+    const shippingFee = addressTab === TAB_MAP && mapAddress?.shippingFee != null
+        ? mapAddress.shippingFee
+        : 30000
+    const finalTotal = totalItemPrice + shippingFee
+
     // Kiểm tra địa chỉ hợp lệ dựa theo tab đang chọn
     const isAddressReady =
         addressTab === TAB_SAVED
@@ -86,7 +105,7 @@ export default function OrderPage() {
         if (!isAddressReady) return
 
         const payload = {
-            userId: 0,
+            //userId: 0,
             note: "",
             paymentMethod,
             items: items.map((i) => ({
@@ -100,21 +119,25 @@ export default function OrderPage() {
             payload.newAddress = null
         } else {
             payload.shippingAddressId = 0
+            payload.shippingFee = mapAddress.shippingFee ?? 30000
+            payload.distanceKm = mapAddress.distanceKm ?? null
             payload.newAddress = {
                 addressId: 0,
-                recipientName: "Địa chỉ mới",
-                phone: "",
-                province: "",
-                district: "",
-                ward: "",
+                recipientName: 'Địa chỉ mới',
+                phone: '',
+                province: '',
+                district: '',
+                ward: '',
                 streetAddress: mapAddress.address,
-                isDefault: false
+                lat: mapAddress.lat,
+                lng: mapAddress.lng,
+                isDefault: false,
             }
         }
-
-        // Tạo đơn hàng trước
+        console.log(payload)
+        // Tạo đơn hàng     trước
         const result = await dispatch(createOrderThunk(payload))
-        console.log(result)
+        //console.log(result)
         // Nếu đặt hàng thành công và là chuyển khoản VNPay → gọi API lấy link rồi redirect
         if (createOrderThunk.fulfilled.match(result) && paymentMethod === 'bank_transfer') {
             const newOrderId =
@@ -134,9 +157,7 @@ export default function OrderPage() {
 
     /* ── Đặt hàng thành công ── */
     if (orderSuccess) {
-        const fmt = (n) => n != null
-            ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n)
-            : null
+        const fmt = formatPrice
 
         const STATUS_MAP = {
             Pending: { label: 'Chờ xác nhận', color: 'bg-amber-100 text-amber-700 border-amber-200' },
@@ -243,7 +264,7 @@ export default function OrderPage() {
                         🏠 Về trang chủ
                     </button>
                     <button
-                        onClick={() => { dispatch(resetOrderState()); navigate('/products') }}
+                        onClick={() => { dispatch(resetOrderState()); navigate('/home') }}
                         className="flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:col-span-2"
                     >
                         🛍️ Tiếp tục mua sắm
@@ -298,26 +319,11 @@ export default function OrderPage() {
                             />
                         )}
 
-                        {/* ── TAB: Chọn địa chỉ qua bản đồ Goong ── */}
+                        {/* ── TAB: Chọn địa chỉ qua bản đồ Mapbox ── */}
                         {addressTab === TAB_MAP && (
-                            <div>
-                                <GoongAddressPicker
-                                    onAddressSelected={(data) => setMapAddress(data)}
-                                />
-                                {mapAddress ? (
-                                    <div className="mt-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm">
-                                        <p className="font-semibold text-green-800">✅ Địa chỉ đã chọn:</p>
-                                        <p className="mt-1 text-green-700">{mapAddress.address}</p>
-                                        <p className="mt-0.5 text-xs text-green-600">
-                                            {mapAddress.lat.toFixed(5)}, {mapAddress.lng.toFixed(5)}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <p className="mt-2 text-xs text-neutral-400">
-                                        ⬆️ Gõ để tìm và chọn địa chỉ giao hàng trên bản đồ.
-                                    </p>
-                                )}
-                            </div>
+                            <MapboxAddressPicker
+                                onAddressSelected={(data) => setMapAddress(data)}
+                            />
                         )}
                     </section>
 
@@ -377,18 +383,37 @@ export default function OrderPage() {
                             ))}
                         </div>
 
-                        <div className="mt-4 border-t border-neutral-200 pt-3 text-sm text-neutral-700">
+                        <div className="mt-4 border-t border-neutral-200 pt-3 text-sm text-neutral-700 space-y-2">
                             <div className="flex justify-between">
                                 <span>Tổng số lượng</span>
                                 <span className="font-semibold">{totalQty} sản phẩm</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Tiền hàng</span>
+                                <span className="font-medium text-neutral-900">{formatPrice(totalItemPrice)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Phí vận chuyển</span>
+                                <div className="text-right">
+                                    <span className="font-medium text-neutral-900">{formatPrice(shippingFee)}</span>
+                                    {addressTab === TAB_MAP && mapAddress?.distanceKm != null && (
+                                        <div className="text-xs text-neutral-400 mt-0.5">📏 {mapAddress.distanceKm} km</div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex justify-between border-t border-neutral-100 pt-2 mt-2 text-base">
+                                <span className="font-semibold text-neutral-900">Tổng thanh toán</span>
+                                <span className="font-bold text-indigo-600">{formatPrice(finalTotal)}</span>
                             </div>
                         </div>
 
                         {/* Địa chỉ đang dùng (preview) */}
                         {addressTab === TAB_MAP && mapAddress && (
-                            <div className="mt-3 rounded-lg bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
-                                <span className="font-medium">🗺️ Giao đến: </span>
-                                {mapAddress.address}
+                            <div className="mt-3 rounded-lg bg-neutral-50 px-3 py-2 text-xs text-neutral-600 space-y-1">
+                                <div><span className="font-medium">🗺️ Giao đến: </span>{mapAddress.address}</div>
+                                {mapAddress.distanceKm != null && (
+                                    <div className="text-green-700 font-medium">📏 {mapAddress.distanceKm} km — 🚚 {formatPrice(mapAddress.shippingFee)}</div>
+                                )}
                             </div>
                         )}
 

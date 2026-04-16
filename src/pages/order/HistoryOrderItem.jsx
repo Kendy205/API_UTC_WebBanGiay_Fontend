@@ -9,14 +9,14 @@ export default function HistoryOrderItem({ item, openReviewModal }) {
         }).format(amount || 0)
     }
 
-    const image = item.productImageSnapshot || item.imageUrl || item.image || 'https://placehold.co/150x150?text=No+Image';
+    const image = item.imageUrlSnapshot || item.imageUrl || item.image || 'https://placehold.co/150x150?text=No+Image';
 
     return (
         <div className="flex gap-4 items-start border-b border-neutral-100 pb-4 last:border-0 last:pb-0">
             <div className="w-20 h-20 flex-shrink-0">
-                <img 
-                    src={image} 
-                    alt={item.productNameSnapshot || 'Product'} 
+                <img
+                    src={image}
+                    alt={item.productNameSnapshot || 'Product'}
                     className="w-full h-full object-cover rounded border border-neutral-200"
                 />
             </div>

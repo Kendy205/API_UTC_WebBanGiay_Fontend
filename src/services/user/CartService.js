@@ -1,4 +1,4 @@
-import { BaseServices } from './BaseService'
+import { BaseServices } from '../BaseService'
 
 export class CartService extends BaseServices {
     /**
@@ -18,7 +18,7 @@ export class CartService extends BaseServices {
      * Xóa 1 item khỏi giỏ hàng trên server.
      * DELETE /api/Cart/items/:variantId
      */
-    removeItem = (variantId) => this.delete(`api/Cart/items/${variantId}`, { __skipGlobalLoading: true })
+    removeItem = (cartItemId) => this.delete(`api/Cart/items/${cartItemId}`, { __skipGlobalLoading: true })
 
     /**
      * Xóa tất cả item khỏi giỏ hàng trên server.

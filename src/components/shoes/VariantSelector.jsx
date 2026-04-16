@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { addToCartThunk } from '../../redux/actions/cartAction'
+import { addToCartThunk } from '../../redux/actions/user/cartAction'
 import { useNavigate } from 'react-router-dom'
 
 /**
@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
  *   - variants: mảng variant từ API  { variantId, sku, colorName, sizeName, stockQuantity, isActive, ... }
  *   - baseProduct: thông tin sản phẩm gốc từ location.state (productName, brandName, categoryName, ...)
  */
-export default function VariantSelector({ variants = [], baseProduct = {} }) {
+export default function VariantSelector({ variants = [], baseProduct = {}, onVariantChange }) {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const isAuthenticated = useSelector((s) => s.auth.isAuthenticated)
@@ -33,6 +33,10 @@ export default function VariantSelector({ variants = [], baseProduct = {} }) {
     const [quantity, setQuantity] = useState(1)
     const [status, setStatus] = useState('idle') // 'idle' | 'loading' | 'success' | 'error'
     const [errorMsg, setErrorMsg] = useState('')
+
+    useEffect(() => {
+        if (onVariantChange) onVariantChange(selectedVariant)
+    }, [selectedVariant, onVariantChange])
 
     const maxStock = selectedVariant?.stockQuantity ?? 99
 

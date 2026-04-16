@@ -1,7 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit'
 import {
     fetchAdminCustomersThunk,
-    updateAdminCustomerStatusThunk,
+    createAdminCustomerThunk,
+    updateAdminCustomerThunk,
 } from '../../actions/admin/adminCustomerAction'
 
 const adminCustomerSlice = createSlice({
@@ -17,9 +18,12 @@ const adminCustomerSlice = createSlice({
                 s.total = a.payload.total ?? s.items.length
             })
             .addCase(fetchAdminCustomersThunk.rejected, (s, a) => { s.loading = false; s.error = a.payload })
-            .addCase(updateAdminCustomerStatusThunk.fulfilled, (s, a) => {
-                const idx = s.items.findIndex((x) => x.id === a.payload.id)
-                if (idx !== -1) s.items[idx].isActive = a.payload.isActive
+            .addCase(createAdminCustomerThunk.fulfilled, (s, a) => {
+                s.items.unshift(a.payload)
+            })
+            .addCase(updateAdminCustomerThunk.fulfilled, (s, a) => {
+                const idx = s.items.findIndex((x) => x.userId === a.payload.userId)
+                if (idx !== -1) s.items[idx] = { ...s.items[idx], ...a.payload }
             })
     },
 })

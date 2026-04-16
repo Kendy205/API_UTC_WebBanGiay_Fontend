@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { getProductReviewsThunk, createReviewThunk } from '../actions/reviewAction'
+import { getProductReviewsThunk, createReviewThunk } from '../../actions/user/reviewAction'
 
 const initialState = {
     // Lấy đánh giá

@@ -27,8 +27,10 @@ export const createAdminCategoryThunk = createAsyncThunk(
 
 export const updateAdminCategoryThunk = createAsyncThunk(
     'adminCategory/update',
-    async ({ id, ...data }, { rejectWithValue }) => {
+    async ({ id, data }, { rejectWithValue }) => {
         try {
+            console.log(id, data)
+            data.parentId = null;
             const res = await adminCategoryService.update(id, data)
             return res.data?.data ?? res.data
         } catch (e) {

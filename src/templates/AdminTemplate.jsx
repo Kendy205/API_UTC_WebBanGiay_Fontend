@@ -57,16 +57,16 @@ const NAV_GROUPS = [
                 to: '/admin/categories',
                 icon: 'M4 6h16M4 10h16M4 14h16M4 18h16',
             },
-            {
-                label: 'Tồn kho',
-                to: '/admin/inventory',
-                icon: ['M5 8h14', 'M5 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M19 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M5 8v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8', 'M10 12h4'],
-            },
-            {
-                label: 'Khuyến mãi',
-                to: '/admin/promotions',
-                icon: ['M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z', 'M7 7h.01'],
-            },
+            // {
+            //     label: 'Tồn kho',
+            //     to: '/admin/inventory',
+            //     icon: ['M5 8h14', 'M5 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M19 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M5 8v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8', 'M10 12h4'],
+            // },
+            // {
+            //     label: 'Khuyến mãi',
+            //     to: '/admin/promotions',
+            //     icon: ['M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z', 'M7 7h.01'],
+            // },
         ],
     },
     {
@@ -83,11 +83,11 @@ const NAV_GROUPS = [
                 to: '/admin/payments',
                 icon: ['M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z', 'M1 10h22'],
             },
-            {
-                label: 'Hoàn trả',
-                to: '/admin/refunds',
-                icon: ['M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8', 'M3 3v5h5'],
-            },
+            // {
+            //     label: 'Hoàn trả',
+            //     to: '/admin/refunds',
+            //     icon: ['M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8', 'M3 3v5h5'],
+            // },
         ],
     },
     {
@@ -114,11 +114,11 @@ const NAV_GROUPS = [
                 to: '/admin/settings',
                 icon: ['M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16z', 'M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M12 2v2', 'M12 20v2', 'M4.93 4.93l1.41 1.41', 'M17.66 17.66l1.41 1.41', 'M2 12h2', 'M20 12h2', 'M6.34 17.66l-1.41 1.41', 'M19.07 4.93l-1.41 1.41'],
             },
-            {
-                label: 'Nhật ký',
-                to: '/admin/logs',
-                icon: ['M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z', 'M14 2v6h6', 'M8 13h8', 'M8 17h8', 'M8 9h1'],
-            },
+            // {
+            //     label: 'Nhật ký',
+            //     to: '/admin/logs',
+            //     icon: ['M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z', 'M14 2v6h6', 'M8 13h8', 'M8 17h8', 'M8 9h1'],
+            // },
         ],
     },
 ]

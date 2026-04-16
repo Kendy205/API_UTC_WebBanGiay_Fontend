@@ -1,4 +1,4 @@
-﻿import { baseServices } from '../user/BaseService'
+import { BaseServices } from '../BaseService'
 
 /**
  * AdminProductService
@@ -17,18 +17,32 @@
  * DELETE /api/Admin/products/{id}
  *   â†’ { success: true }
  */
-class AdminProductService {
+export class AdminProductService extends BaseServices {
     getAll = (params = {}) =>
-        baseServices.get('/api/Admin/products', { params })
+        this.get('/api/Admin/products', { params })
 
-    create = (data) =>
-        baseServices.post('/api/Admin/products', data)
+    create = (data) => {
+        const config = data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}
+        return this.post('/api/Admin/products', data, config)
+    }
 
-    update = (id, data) =>
-        baseServices.put(`/api/Admin/products/${id}`, data)
+    update = (id, data) => {
+        const config = data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}
+        return this.put(`/api/Admin/products/${id}`, data, config)
+    }
 
     remove = (id) =>
-        baseServices.delete(`/api/Admin/products/${id}`)
+        this.delete(`/api/Admin/products/${id}`)
+
+    // Variants
+    createVariant = (data) => this.post('/api/ProductVariant', data)
+    updateVariant = (id, data) => this.put(`/api/ProductVariant/${id}`, data)
+    removeVariant = (id) => this.delete(`/api/ProductVariant/${id}`)
+
+    // Attributes
+    getColors = () => this.get('/api/Color')
+    getSizes = () => this.get('/api/Size')
 }
+
 
 export const adminProductService = new AdminProductService()

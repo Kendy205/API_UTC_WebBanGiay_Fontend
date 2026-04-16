@@ -1,4 +1,4 @@
-import { BaseServices } from './BaseService'
+import { BaseServices } from '../BaseService'
 
 export class AuthService extends BaseServices {
     login = (body) => this.post('api/Auth/login', body)

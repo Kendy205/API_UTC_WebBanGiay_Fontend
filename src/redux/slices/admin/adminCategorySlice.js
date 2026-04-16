@@ -17,11 +17,11 @@ const adminCategorySlice = createSlice({
             .addCase(fetchAdminCategoriesThunk.rejected, (s, a) => { s.loading = false; s.error = a.payload })
             .addCase(createAdminCategoryThunk.fulfilled, (s, a) => { s.items.push(a.payload) })
             .addCase(updateAdminCategoryThunk.fulfilled, (s, a) => {
-                const idx = s.items.findIndex((x) => x.id === a.payload.id)
+                const idx = s.items.findIndex((x) => x.categoryId === a.payload.categoryId)
                 if (idx !== -1) s.items[idx] = a.payload
             })
             .addCase(deleteAdminCategoryThunk.fulfilled, (s, a) => {
-                s.items = s.items.filter((x) => x.id !== a.payload)
+                s.items = s.items.filter((x) => x.categoryId !== a.payload)
             })
     },
 })

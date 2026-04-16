@@ -1,4 +1,4 @@
-﻿import { baseServices } from '../user/BaseService'
+import { BaseServices } from '../BaseService'
 
 /**
  * AdminReviewAdminService
@@ -13,11 +13,10 @@
  * DELETE /api/Admin/reviews/{id}
  *   â†’ { success: true }
  */
-class AdminReviewAdminService {
-    getAll = (params = {}) => baseServices.get('/api/Admin/reviews', { params })
-    updateVisibility = (id, isVisible) =>
-        baseServices.put(`/api/Admin/reviews/${id}/visibility`, { isVisible })
-    remove = (id) => baseServices.delete(`/api/Admin/reviews/${id}`)
+export class AdminReviewAdminService extends BaseServices {
+    getAll = (params = {}) => this.get('/api/Admin/reviews', { params })
+    updateVisibility = (id, isPublic) =>
+        this.put(`/api/Admin/reviews/${id}/ispublic`, { isPublic })
 }
 
 export const adminReviewAdminService = new AdminReviewAdminService()

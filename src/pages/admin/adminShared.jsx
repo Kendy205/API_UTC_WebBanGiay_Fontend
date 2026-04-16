@@ -1,5 +1,5 @@
 // Shared admin UI utilities
-import { useState } from 'react'
+import React, { useState } from 'react'
 
 // ─── Shared styles ────────────────────────────────────────────
 export const card = {
@@ -82,12 +82,19 @@ export function Btn({ children, onClick, variant = 'primary', small, style: s = 
     )
 }
 
-export function Table({ columns, data, keyField = 'id' }) {
+export function Table({ columns, data, keyField = 'id', expandableRowRender }) {
+    const [expandedIds, setExpandedIds] = useState([])
+
+    const toggleExpand = (id) => {
+        setExpandedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+    }
+
     return (
         <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                     <tr style={{ background: '#f8fafc' }}>
+                        {expandableRowRender && <th style={{ width: '40px', padding: '10px 16px' }}></th>}
                         {columns.map((c) => (
                             <th key={c.key} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
                                 {c.label}
@@ -96,20 +103,45 @@ export function Table({ columns, data, keyField = 'id' }) {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((row, ri) => (
-                        <tr key={row[keyField] ?? ri} style={{ borderTop: '1px solid #f1f5f9', transition: 'background 0.1s ease' }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                        >
-                            {columns.map((c) => (
-                                <td key={c.key} style={{ padding: '11px 16px', fontSize: '13px', color: '#374151', ...c.cellStyle }}>
-                                    {c.render ? c.render(row[c.key], row) : row[c.key]}
-                                </td>
-                            ))}
-                        </tr>
-                    ))}
+                    {data.map((row, ri) => {
+                        const id = row[keyField] ?? ri
+                        const isExpanded = expandedIds.includes(id)
+                        return (
+                            <React.Fragment key={id}>
+                                <tr style={{ borderTop: '1px solid #f1f5f9', transition: 'background 0.1s ease', background: isExpanded ? '#f8fafc' : 'transparent' }}
+                                    onMouseEnter={(e) => !isExpanded && (e.currentTarget.style.background = '#f8fafc')}
+                                    onMouseLeave={(e) => !isExpanded && (e.currentTarget.style.background = 'transparent')}
+                                >
+                                    {expandableRowRender && (
+                                        <td style={{ padding: '11px 16px', textAlign: 'center', color: '#64748b', cursor: 'pointer' }} onClick={() => toggleExpand(id)}>
+                                            <span style={{
+                                                display: 'inline-block',
+                                                transition: 'transform 0.2s',
+                                                transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                                                fontSize: '10px'
+                                            }}>▶</span>
+                                        </td>
+                                    )}
+                                    {columns.map((c) => (
+                                        <td key={c.key} style={{ padding: '11px 16px', fontSize: '13px', color: '#374151', ...c.cellStyle }}>
+                                            {c.render ? c.render(row[c.key], row) : row[c.key]}
+                                        </td>
+                                    ))}
+                                </tr>
+                                {isExpanded && expandableRowRender && (
+                                    <tr>
+                                        <td style={{ padding: 0 }} colSpan={columns.length + 1}>
+                                            <div style={{ background: '#f8fafc', padding: '0 16px 16px 16px', borderTop: '1px dashed #e2e8f0' }}>
+                                                {expandableRowRender(row)}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </React.Fragment>
+                        )
+                    })}
                     {data.length === 0 && (
-                        <tr><td colSpan={columns.length} style={{ textAlign: 'center', padding: '40px 16px', color: '#94a3b8', fontSize: '13px' }}>Không có dữ liệu</td></tr>
+                        <tr><td colSpan={columns.length + (expandableRowRender ? 1 : 0)} style={{ textAlign: 'center', padding: '40px 16px', color: '#94a3b8', fontSize: '13px' }}>Không có dữ liệu</td></tr>
                     )}
                 </tbody>
             </table>
