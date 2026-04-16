@@ -114,9 +114,9 @@ export function Table({ columns, data, keyField = 'id', expandableRowRender }) {
                                 >
                                     {expandableRowRender && (
                                         <td style={{ padding: '11px 16px', textAlign: 'center', color: '#64748b', cursor: 'pointer' }} onClick={() => toggleExpand(id)}>
-                                            <span style={{ 
-                                                display: 'inline-block', 
-                                                transition: 'transform 0.2s', 
+                                            <span style={{
+                                                display: 'inline-block',
+                                                transition: 'transform 0.2s',
                                                 transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
                                                 fontSize: '10px'
                                             }}>▶</span>

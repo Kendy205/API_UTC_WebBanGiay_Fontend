@@ -15,24 +15,12 @@ export const fetchAdminReviewsThunk = createAsyncThunk(
 
 export const updateAdminReviewVisibilityThunk = createAsyncThunk(
     'adminReviewAdmin/updateVisibility',
-    async ({ id, isVisible }, { rejectWithValue }) => {
+    async ({ id, isPublic }, { rejectWithValue }) => {
         try {
-            const res = await adminReviewAdminService.updateVisibility(id, isVisible)
-            return res.data?.data ?? res.data
+            await adminReviewAdminService.updateVisibility(id, isPublic)
+            return { id, isPublic }
         } catch (e) {
             return rejectWithValue(e?.response?.data?.message ?? 'Lỗi cập nhật hiển thị')
-        }
-    }
-)
-
-export const deleteAdminReviewThunk = createAsyncThunk(
-    'adminReviewAdmin/delete',
-    async (id, { rejectWithValue }) => {
-        try {
-            await adminReviewAdminService.remove(id)
-            return id
-        } catch (e) {
-            return rejectWithValue(e?.response?.data?.message ?? 'Lỗi xóa đánh giá')
         }
     }
 )
