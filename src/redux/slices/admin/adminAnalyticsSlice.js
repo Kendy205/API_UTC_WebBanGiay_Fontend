@@ -21,7 +21,7 @@ const adminAnalyticsSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchAdminAnalyticsOverviewThunk.pending, (s) => { s.loading = true; s.error = null })
-            .addCase(fetchAdminAnalyticsOverviewThunk.fulfilled, (s, a) => { s.loading = false; s.ov = a.payload })
+            .addCase(fetchAdminAnalyticsOverviewThunk.fulfilled, (s, a) => { s.loading = false; s.overview = a.payload })
             .addCase(fetchAdminAnalyticsOverviewThunk.rejected, (s, a) => { s.loading = false; s.error = a.payload })
             .addCase(fetchOrderStatusDistributionThunk.fulfilled, (s, a) => { s.statusDistribution = a.payload })
             .addCase(fetchAdminRevenueChartThunk.fulfilled, (s, a) => { s.revenueChart = a.payload })

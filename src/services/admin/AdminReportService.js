@@ -1,14 +1,14 @@
-import { baseServices } from '../user/BaseService'
+import { BaseServices } from '../BaseService'
 
 /**
  * AdminReportService
  *
- * GET  /api/Admin/reports/sales?from=ISO&to=ISO&groupBy=day|week|month
- *   â†’ { data:[{period,revenue,orders,avgValue}], summary:{totalRevenue,totalOrders,avgOrderValue,returnRate} }
+ * GET  /api/Reports/sales?from=YYYY-MM-DD&to=YYYY-MM-DD&groupBy=day|week|month
+ *   → { summary:{totalRevenue,totalOrders,avgOrderValue,returnRate}, data:[{period,revenue,orders,avgValue}] }
  */
 export class AdminReportService extends BaseServices {
     getSalesReport = (params = {}) =>
-        baseServices.get('/api/Reports/sales', { params })
+        this.get('/api/Reports/sales', { params })
 }
 
 export const adminReportService = new AdminReportService()

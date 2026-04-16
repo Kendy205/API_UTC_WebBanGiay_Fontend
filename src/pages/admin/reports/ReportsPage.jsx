@@ -2,12 +2,18 @@ import { useState, useEffect } from 'react'
 import { adminReportService } from '../../../services/admin/AdminReportService'
 import { PageHeader, Table, fmt } from '../adminShared'
 
+const today = new Date()
+const thirtyDaysAgo = new Date(today)
+thirtyDaysAgo.setDate(today.getDate() - 30)
+const fmt_date = (d) => d.toISOString().slice(0, 10)
+
 export default function ReportsPage() {
-    const [groupBy, setGroupBy] = useState('week')
-    const [fromDate, setFromDate] = useState('2026-02-01')
-    const [toDate, setToDate] = useState('2026-09-01')
+    const [groupBy, setGroupBy] = useState('day')
+    const [fromDate, setFromDate] = useState(fmt_date(thirtyDaysAgo))
+    const [toDate, setToDate] = useState(fmt_date(today))
     const [reportData, setReportData] = useState({ summary: {}, data: [] })
     const [loading, setLoading] = useState(false)
+
 
     useEffect(() => {
         const fetchReports = async () => {

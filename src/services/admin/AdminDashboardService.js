@@ -1,8 +1,8 @@
-import { baseServices } from '../user/BaseService'
+import { BaseServices } from '../BaseService'
 
 
 
-class AdminDashboardService {
-    getSummary = () => baseServices.get('/api/Dashboard/summary')
+class AdminDashboardService extends BaseServices {
+    getSummary = () => this.get('/api/Dashboard/summary')
 }
 export const adminDashboardService = new AdminDashboardService()
