@@ -12,10 +12,9 @@ import adminCategoryReducer from './slices/admin/adminCategorySlice'
 import adminBrandReducer from './slices/admin/adminBrandSlice'
 import adminOrderAdminReducer from './slices/admin/adminOrderAdminSlice'
 import adminCustomerReducer from './slices/admin/adminCustomerSlice'
-import adminPromotionReducer from './slices/admin/adminPromotionSlice'
-import adminInventoryReducer from './slices/admin/adminInventorySlice'
+
 import adminPaymentReducer from './slices/admin/adminPaymentSlice'
-import adminRefundReducer from './slices/admin/adminRefundSlice'
+//import adminRefundReducer from './slices/admin/adminRefundSlice'
 import adminReviewAdminReducer from './slices/admin/adminReviewAdminSlice'
 import adminAnalyticsReducer from './slices/admin/adminAnalyticsSlice'
 
@@ -33,10 +32,9 @@ export const store = configureStore({
         adminBrand: adminBrandReducer,
         adminOrderAdmin: adminOrderAdminReducer,
         adminCustomer: adminCustomerReducer,
-        adminPromotion: adminPromotionReducer,
-        adminInventory: adminInventoryReducer,
+
         adminPayment: adminPaymentReducer,
-        adminRefund: adminRefundReducer,
+        // adminRefund: adminRefundReducer,
         adminReviewAdmin: adminReviewAdminReducer,
         adminAnalytics: adminAnalyticsReducer,
     },

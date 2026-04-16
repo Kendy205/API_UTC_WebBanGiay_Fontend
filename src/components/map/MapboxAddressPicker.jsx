@@ -10,8 +10,8 @@ function haversineKm(lat1, lng1, lat2, lng2) {
     const a =
         Math.sin(dLat / 2) ** 2 +
         Math.cos((lat1 * Math.PI) / 180) *
-            Math.cos((lat2 * Math.PI) / 180) *
-            Math.sin(dLng / 2) ** 2
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) ** 2
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
@@ -206,6 +206,7 @@ export default function MapboxAddressPicker({
     const [showDrop, setShowDrop] = useState(false)
     const [locating, setLocating] = useState(false)
     const [mapReady, setMapReady] = useState(false)
+    const [routeLoading, setRouteLoading] = useState(false)
     const [error, setError] = useState('')
 
     const [selectedInfo, setSelectedInfo] = useState(null) // { address, lat, lng, distanceKm, shippingFee }
@@ -284,6 +285,86 @@ export default function MapboxAddressPicker({
         }
     }, [storeLat, storeLng]) // eslint-disable-line react-hooks/exhaustive-deps
 
+    // ── Xóa tuyến đường khỏi bản đồ ─────────────────────────────────────
+    const clearRoute = useCallback(() => {
+        const map = mapRef.current
+        if (!map) return
+        if (map.getLayer('route-line')) map.removeLayer('route-line')
+        if (map.getLayer('route-outline')) map.removeLayer('route-outline')
+        if (map.getSource('route')) map.removeSource('route')
+    }, [])
+
+    // ── Gọi Mapbox Directions API → vẽ tuyến đường thực tế ──────────────
+    const drawRoute = useCallback(async (toLng, toLat) => {
+        const map = mapRef.current
+        if (!map) return
+
+        setRouteLoading(true)
+        clearRoute()
+
+        try {
+            const url =
+                `https://api.mapbox.com/directions/v5/mapbox/driving/` +
+                `${storeLng},${storeLat};${toLng},${toLat}` +
+                `?geometries=geojson&overview=full&access_token=${MAPBOX_TOKEN}`
+
+            const res = await fetch(url)
+            const json = await res.json()
+            const route = json.routes?.[0]
+            if (!route) return
+
+            const geojson = {
+                type: 'Feature',
+                geometry: route.geometry,
+            }
+
+            // Xóa layer cũ (nếu có) trước khi thêm mới
+            clearRoute()
+
+            // Viền trắng phía dưới để đường nổi bật hơn
+            map.addSource('route', { type: 'geojson', data: geojson })
+
+            map.addLayer({
+                id: 'route-outline',
+                type: 'line',
+                source: 'route',
+                layout: { 'line-join': 'round', 'line-cap': 'round' },
+                paint: {
+                    'line-color': '#ffffff',
+                    'line-width': 8,
+                    'line-opacity': 0.8,
+                },
+            })
+
+            // Đường màu xanh chính
+            map.addLayer({
+                id: 'route-line',
+                type: 'line',
+                source: 'route',
+                layout: { 'line-join': 'round', 'line-cap': 'round' },
+                paint: {
+                    'line-color': '#3b82f6',
+                    'line-width': 5,
+                    'line-opacity': 0.92,
+                    'line-dasharray': [0, 0], // solid line
+                },
+            })
+
+            // Fit camera vừa cả 2 điểm
+            const coords = route.geometry.coordinates
+            const lngs = coords.map((c) => c[0])
+            const lats = coords.map((c) => c[1])
+            map.fitBounds(
+                [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
+                { padding: { top: 60, bottom: 60, left: 40, right: 40 }, speed: 1.2 }
+            )
+        } catch {
+            // Lỗi API → bỏ qua, không ảnh hưởng chức năng chọn địa chỉ
+        } finally {
+            setRouteLoading(false)
+        }
+    }, [storeLng, storeLat, clearRoute])
+
     // ── Commit selection & fire callback ─────────────────────────────────
     const commitSelection = useCallback((address, lat, lng) => {
         const distanceKm = haversineKm(storeLat, storeLng, lat, lng)
@@ -293,7 +374,10 @@ export default function MapboxAddressPicker({
         setSelectedInfo(info)
         setSearchText(address)
         onAddressSelected?.(info)
-    }, [storeLat, storeLng, onAddressSelected])
+
+        // Vẽ tuyến đường thực tế trên bản đồ
+        drawRoute(lng, lat)
+    }, [storeLat, storeLng, onAddressSelected, drawRoute])
 
     // ── Fly map to position ───────────────────────────────────────────────
     const flyTo = useCallback((lng, lat, zoom = 16) => {
@@ -371,6 +455,7 @@ export default function MapboxAddressPicker({
         setShowDrop(false)
         setSelectedInfo(null)
         setError('')
+        clearRoute()
         flyTo(storeLng, storeLat, 13)
         onAddressSelected?.(null)
     }
@@ -378,8 +463,8 @@ export default function MapboxAddressPicker({
     // ── Shipping fee badge color ──────────────────────────────────────────
     const feeColor = !selectedInfo ? '#9ca3af'
         : selectedInfo.shippingFee <= 25000 ? '#059669'
-        : selectedInfo.shippingFee <= 40000 ? '#d97706'
-        : '#dc2626'
+            : selectedInfo.shippingFee <= 40000 ? '#d97706'
+                : '#dc2626'
 
     const fmt = (n) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n)
 
@@ -449,6 +534,12 @@ export default function MapboxAddressPicker({
                 {locating && (
                     <div style={S.loading}>
                         <span style={{ fontSize: '20px' }}>⏳</span> Đang lấy vị trí GPS...
+                    </div>
+                )}
+
+                {routeLoading && !locating && (
+                    <div style={{ ...S.loading, background: 'rgba(255,255,255,.6)' }}>
+                        <span style={{ fontSize: '18px' }}>🗺️</span> Đang tải tuyến đường...
                     </div>
                 )}
             </div>

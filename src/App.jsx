@@ -22,15 +22,15 @@ import AnalyticsPage from './pages/admin/analytics/AnalyticsPage'
 import ReportsPage from './pages/admin/reports/ReportsPage'
 import ProductsAdminPage from './pages/admin/products/ProductsAdminPage'
 import CategoriesPage from './pages/admin/categories/CategoriesPage'
-import InventoryPage from './pages/admin/inventory/InventoryPage'
-import PromotionsPage from './pages/admin/promotions/PromotionsPage'
+//import InventoryPage from './pages/admin/inventory/InventoryPage'
+//import PromotionsPage from './pages/admin/promotions/PromotionsPage'
 import OrdersAdminPage from './pages/admin/orders/OrdersAdminPage'
 import PaymentsPage from './pages/admin/payments/PaymentsPage'
-import RefundsPage from './pages/admin/refunds/RefundsPage'
+//import RefundsPage from './pages/admin/refunds/RefundsPage'
 import CustomersPage from './pages/admin/customers/CustomersPage'
 import ReviewsAdminPage from './pages/admin/reviews/ReviewsAdminPage'
 import SettingsPage from './pages/admin/settings/SettingsPage'
-import LogsPage from './pages/admin/logs/LogsPage'
+//import LogsPage from './pages/admin/logs/LogsPage'
 import MapboxAddressPicker from './components/map/MapboxAddressPicker'
 
 function App() {
@@ -77,11 +77,11 @@ function App() {
                             <Route path="reports" element={<ReportsPage />} />
                             <Route path="products" element={<ProductsAdminPage />} />
                             <Route path="categories" element={<CategoriesPage />} />
-                            <Route path="inventory" element={<InventoryPage />} />
+                            {/* <Route path="inventory" element={<InventoryPage />} /> */}
                             {/* <Route path="promotions" element={<PromotionsPage />} /> */}
                             <Route path="orders" element={<OrdersAdminPage />} />
                             <Route path="payments" element={<PaymentsPage />} />
-                            <Route path="refunds" element={<RefundsPage />} />
+                            {/* <Route path="refunds" element={<RefundsPage />} /> */}
                             <Route path="customers" element={<CustomersPage />} />
                             <Route path="reviews" element={<ReviewsAdminPage />} />
                             <Route path="settings" element={<SettingsPage />} />

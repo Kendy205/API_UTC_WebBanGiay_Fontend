@@ -14,6 +14,11 @@ export class OrderService extends BaseServices {
     addAddress = (body) => this.post('api/Address', body)
 
     /**
+     * Soft-delete địa chỉ: PUT /api/Address/{id} với isDelete: true
+     */
+    softDeleteAddress = (id, addressData) => this.put(`api/Address/${id}`, { ...addressData, isDelete: true })
+
+    /**
      * Tạo đơn hàng mới.
      * POST /api/Order/checkout
      */

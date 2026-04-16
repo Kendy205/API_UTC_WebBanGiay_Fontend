@@ -24,6 +24,26 @@ export const addAddressThunk = createAsyncThunk(
 )
 
 /**
+ * deleteAddressThunk – soft delete bằng PUT isDelete: true
+ */
+export const deleteAddressThunk = createAsyncThunk(
+    'order/deleteAddress',
+    async ({ addressId, addressData }, { dispatch, rejectWithValue }) => {
+        try {
+            await orderService.softDeleteAddress(addressId, addressData)
+            dispatch(fetchAddressesThunk())
+            return addressId
+        } catch (error) {
+            return rejectWithValue(
+                error?.response?.data?.message ??
+                error.message ??
+                'Không thể xóa địa chỉ.'
+            )
+        }
+    }
+)
+
+/**
  * fetchAddressesThunk
  */
 export const fetchAddressesThunk = createAsyncThunk(

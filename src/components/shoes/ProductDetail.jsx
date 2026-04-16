@@ -106,75 +106,85 @@ export default function ProductDetail() {
     const hasDiscount = basePrice != null && basePrice > 0 && displayPrice < basePrice
 
     return (
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
+        <div className="rounded-lg border bg-white shadow-sm p-6">
+            
+            {/* ── Khu vực chi tiết sản phẩm ── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                {/* ── Cột Trái: Ảnh sản phẩm ── */}
+                <div>
+                    <img
+                        src={image ?? 'https://placehold.co/800x800?text=No+Image'}
+                        alt={productName}
+                        className="w-full rounded-lg object-contain bg-neutral-50 border border-neutral-100"
+                        style={{ height: '450px' }}
+                    />
+                </div>
 
-            {/* ── Ảnh sản phẩm ── */}
-            <img
-                src={image ?? 'https://placehold.co/800x600?text=No+Image'}
-                alt={productName}
-                className="mb-5 w-full rounded-lg object-cover bg-neutral-100"
-                style={{ maxHeight: 360 }}
-            />
+                {/* ── Cột Phải: Thông tin & Đặt hàng ── */}
+                <div className="flex flex-col">
+                    {/* ── Header ── */}
+                    <div className="mb-1 flex items-start justify-between gap-3">
+                        <h1 className="text-xl font-semibold text-neutral-900">
+                            {productName ?? `Sản phẩm #${productId}`}
+                        </h1>
+                        {pid != null && (
+                            <span className="shrink-0 rounded bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600">
+                                #{pid}
+                            </span>
+                        )}
+                    </div>
 
-            {/* ── Header ── */}
-            <div className="mb-1 flex items-start justify-between gap-3">
-                <h1 className="text-xl font-semibold text-neutral-900">
-                    {productName ?? `Sản phẩm #${productId}`}
-                </h1>
-                {pid != null && (
-                    <span className="shrink-0 rounded bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600">
-                        #{pid}
-                    </span>
-                )}
+                    {/* Slug */}
+                    {slug && (
+                        <p className="mb-2 text-xs text-neutral-400">/{slug}</p>
+                    )}
+
+                    {/* ── Meta: hãng & danh mục ── */}
+                    {(brandName || categoryName) && (
+                        <p className="mb-3 text-sm text-neutral-500">
+                            {brandName && <span>Hãng: <span className="font-medium text-neutral-700">{brandName}</span></span>}
+                            {brandName && categoryName && <span className="mx-2">•</span>}
+                            {categoryName && <span>Danh mục: <span className="font-medium text-neutral-700">{categoryName}</span></span>}
+                        </p>
+                    )}
+
+                    {/* ── Giá ── */}
+                    {displayPrice != null && (
+                        <div className="mb-4 flex items-baseline gap-3">
+                            <span className="text-2xl font-bold text-neutral-900">
+                                {formatPrice(displayPrice)}
+                            </span>
+                            {hasDiscount && (
+                                <>
+                                    <span className="text-sm text-neutral-400 line-through">
+                                        {formatPrice(basePrice)}
+                                    </span>
+                                    <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">
+                                        -{Math.round((1 - displayPrice / basePrice) * 100)}%
+                                    </span>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ── Mô tả ── */}
+                    {description && (
+                        <p className="mb-6 text-sm leading-relaxed text-neutral-600 border-b border-neutral-100 pb-6">
+                            {description}
+                        </p>
+                    )}
+
+                    {/* ── Chọn biến thể ── */}
+                    <div className="mt-8">
+                        <VariantSelector variants={variants} baseProduct={product} onVariantChange={setActiveVariant} />
+                    </div>
+                </div>
             </div>
 
-            {/* Slug */}
-            {slug && (
-                <p className="mb-2 text-xs text-neutral-400">/{slug}</p>
-            )}
-
-            {/* ── Meta: hãng & danh mục ── */}
-            {(brandName || categoryName) && (
-                <p className="mb-3 text-sm text-neutral-500">
-                    {brandName && <span>Hãng: <span className="font-medium text-neutral-700">{brandName}</span></span>}
-                    {brandName && categoryName && <span className="mx-2">•</span>}
-                    {categoryName && <span>Danh mục: <span className="font-medium text-neutral-700">{categoryName}</span></span>}
-                </p>
-            )}
-
-            {/* ── Giá ── */}
-            {displayPrice != null && (
-                <div className="mb-4 flex items-baseline gap-3">
-                    <span className="text-2xl font-bold text-neutral-900">
-                        {formatPrice(displayPrice)}
-                    </span>
-                    {hasDiscount && (
-                        <>
-                            <span className="text-sm text-neutral-400 line-through">
-                                {formatPrice(basePrice)}
-                            </span>
-                            <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">
-                                -{Math.round((1 - displayPrice / basePrice) * 100)}%
-                            </span>
-                        </>
-                    )}
-                </div>
-            )}
-
-            {/* ── Mô tả ── */}
-            {description && (
-                <p className="mb-5 text-sm leading-relaxed text-neutral-600">
-                    {description}
-                </p>
-            )}
-
-            <hr className="mb-5 border-neutral-200" />
-
-            {/* ── Chọn biến thể ── */}
-            <VariantSelector variants={variants} baseProduct={product} onVariantChange={setActiveVariant} />
-
-            {/* ── Danh sách đánh giá ── */}
-            <ProductReviews productId={productId} />
+            {/* ── Khu vực đánh giá ── */}
+            <div className="mt-8 pt-6 border-t border-neutral-200">
+                <ProductReviews productId={productId} />
+            </div>
         </div>
     )
 }
