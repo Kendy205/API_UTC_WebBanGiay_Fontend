@@ -1,4 +1,4 @@
-﻿import { BaseServices } from '../BaseService'
+import { baseServices } from '../user/BaseService'
 
 /**
  * AdminReportService
@@ -8,7 +8,7 @@
  */
 export class AdminReportService extends BaseServices {
     getSalesReport = (params = {}) =>
-        this.get('/api/Admin/reports/sales', { params })
+        baseServices.get('/api/Reports/sales', { params })
 }
 
 export const adminReportService = new AdminReportService()

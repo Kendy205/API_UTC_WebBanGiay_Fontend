@@ -1,16 +1,43 @@
-import { useState } from 'react'
-import { MOCK_REPORTS } from '../adminMockData'
+import { useState, useEffect } from 'react'
+import { adminReportService } from '../../../services/admin/AdminReportService'
 import { PageHeader, Table, fmt } from '../adminShared'
 
 export default function ReportsPage() {
     const [groupBy, setGroupBy] = useState('week')
-    const { summary, data } = MOCK_REPORTS
+    const [fromDate, setFromDate] = useState('2026-02-01')
+    const [toDate, setToDate] = useState('2026-09-01')
+    const [reportData, setReportData] = useState({ summary: {}, data: [] })
+    const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        const fetchReports = async () => {
+            if (!fromDate || !toDate) return;
+            setLoading(true)
+            try {
+                const response = await adminReportService.getSalesReport({
+                    from: fromDate,
+                    to: toDate,
+                    groupBy: groupBy
+                })
+                if (response.data && response.data.success) {
+                    setReportData(response.data.data)
+                }
+            } catch (error) {
+                console.error("Failed to fetch reports:", error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchReports()
+    }, [groupBy, fromDate, toDate])
+
+    const { summary, data } = reportData
 
     const sumCards = [
-        { label: 'Tổng doanh thu', value: fmt(summary.totalRevenue), color: '#6366f1' },
-        { label: 'Tổng đơn hàng', value: summary.totalOrders.toLocaleString(), color: '#10b981' },
-        { label: 'Giá trị TB / đơn', value: fmt(summary.avgOrderValue), color: '#f59e0b' },
-        { label: 'Tỉ lệ hoàn trả', value: `${summary.returnRate}%`, color: '#ef4444' },
+        { label: 'Tổng doanh thu', value: fmt(summary?.totalRevenue || 0), color: '#6366f1' },
+        { label: 'Tổng đơn hàng', value: (summary?.totalOrders || 0).toLocaleString(), color: '#10b981' },
+        { label: 'Giá trị TB / đơn', value: fmt(summary?.avgOrderValue || 0), color: '#f59e0b' },
+        { label: 'Tỉ lệ hoàn trả', value: `${summary?.returnRate || 0}%`, color: '#ef4444' },
     ]
 
     const cols = [
@@ -42,14 +69,18 @@ export default function ReportsPage() {
                     </button>
                 ))}
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <input type="date" style={{ padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px' }} />
+                    <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px' }} />
                     <span style={{ fontSize: '12px', color: '#94a3b8' }}>→</span>
-                    <input type="date" style={{ padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px' }} />
+                    <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px' }} />
                 </div>
             </div>
 
             <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
-                <Table columns={cols} data={data} keyField="period" />
+                {loading ? (
+                    <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>Đang tải dữ liệu...</div>
+                ) : (
+                    <Table columns={cols} data={data || []} keyField="period" />
+                )}
             </div>
 
             {/* Export button */}
