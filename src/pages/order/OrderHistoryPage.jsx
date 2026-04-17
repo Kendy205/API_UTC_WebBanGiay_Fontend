@@ -28,9 +28,9 @@ const StarRating = ({ rating, setRating }) => {
 
 export default function OrderHistoryPage() {
     const dispatch = useDispatch()
-    const { myOrders: orders, loadingOrders: loading, myOrdersError: error } = useSelector(state => state.order)
+    const { myOrders: orders, totalOrders, loadingOrders: loading, myOrdersError: error } = useSelector(state => state.order)
     const { submittingReview } = useSelector(state => state.review)
-
+    console.log(orders)
     // Review Modal State
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedItem, setSelectedItem] = useState(null)
@@ -44,11 +44,11 @@ export default function OrderHistoryPage() {
 
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1)
-    const pageSize = 5
+    const pageSize = 10
 
     useEffect(() => {
-        dispatch(fetchMyOrdersThunk())
-    }, [dispatch])
+        dispatch(fetchMyOrdersThunk({ page: currentPage, pageSize }))
+    }, [dispatch, currentPage, pageSize])
 
     const openReviewModal = (item) => {
         setSelectedItem(item)
@@ -99,6 +99,7 @@ export default function OrderHistoryPage() {
         setCancelError(null)
         try {
             await dispatch(cancelOrderThunk({ orderId })).unwrap()
+            dispatch(fetchMyOrdersThunk({ page: currentPage, pageSize }))
             closeCancelModal()
         } catch (err) {
             console.error('Lỗi khi hủy đơn hàng', err)
@@ -149,7 +150,7 @@ export default function OrderHistoryPage() {
                 </div>
             ) : (
                 <div className="space-y-6">
-                    {orders.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((order) => (
+                    {orders.map((order) => (
                         <div key={order.orderId} className="bg-white rounded-lg shadow border border-neutral-100 overflow-hidden">
                             {/* Header Order */}
                             <div className="bg-neutral-50 px-6 py-4 border-b border-neutral-100 flex flex-wrap justify-between items-center gap-4">
@@ -212,7 +213,7 @@ export default function OrderHistoryPage() {
                     {/* Phân trang */}
                     <Pagination
                         currentPage={currentPage}
-                        totalPages={Math.max(1, Math.ceil(orders.length / pageSize))}
+                        totalPages={Math.max(1, Math.ceil(totalOrders / pageSize))}
                         onPageChange={setCurrentPage}
                     />
                 </div>

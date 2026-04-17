@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { message } from 'antd'
 import { adminReportService } from '../../../services/admin/AdminReportService'
 import { PageHeader, Table, fmt } from '../adminShared'
 
@@ -30,6 +31,9 @@ export default function ReportsPage() {
                 }
             } catch (error) {
                 console.error("Failed to fetch reports:", error)
+                const errMsg = error.response?.data?.message || "Có lỗi xảy ra khi lấy dữ liệu báo cáo"
+                message.error(errMsg)
+                setReportData({ summary: {}, data: [] })
             } finally {
                 setLoading(false)
             }
@@ -90,11 +94,11 @@ export default function ReportsPage() {
             </div>
 
             {/* Export button */}
-            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+            {/* <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
                 <button style={{ padding: '9px 18px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     📥 Xuất Excel
                 </button>
-            </div>
+            </div> */}
         </div>
     )
 }

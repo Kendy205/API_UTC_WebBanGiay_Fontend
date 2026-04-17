@@ -122,11 +122,10 @@ export const payVnpayThunk = createAsyncThunk(
  */
 export const fetchMyOrdersThunk = createAsyncThunk(
     'order/fetchMyOrders',
-    async (_, { rejectWithValue }) => {
+    async (params, { rejectWithValue }) => {
         try {
-            const response = await orderService.getMyOrders()
-            const data = response.data?.data ?? response.data ?? []
-            return Array.isArray(data) ? data : []
+            const response = await orderService.getMyOrders(params)
+            return response.data?.data ?? response.data
         } catch (error) {
             const msg =
                 error?.response?.data?.message ??
@@ -145,7 +144,6 @@ export const cancelOrderThunk = createAsyncThunk(
     async ({ orderId }, { dispatch, rejectWithValue }) => {
         try {
             const response = await orderService.cancelOrder(orderId)
-            dispatch(fetchMyOrdersThunk())
             return response.data?.data ?? response.data
         } catch (error) {
             const msg =

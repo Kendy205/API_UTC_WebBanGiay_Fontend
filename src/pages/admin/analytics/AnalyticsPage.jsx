@@ -31,7 +31,7 @@ export default function AnalyticsPage() {
     const [year, setYear] = useState(new Date().getFullYear())
     const dispatch = useDispatch()
     const { overview, statusDistribution, loading } = useSelector((state) => state.adminAnalytics)
-    console.log(overview)
+    //console.log(statusDistribution)
     useEffect(() => {
         dispatch(fetchAdminAnalyticsOverviewThunk(year))
         dispatch(fetchOrderStatusDistributionThunk(year))

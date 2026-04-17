@@ -6,7 +6,7 @@ import ProductCard from '../../components/shoes/ProductCard'
 import Skeleton from '../../components/loading/Skeleton'
 import Pagination from '../../components/common/Pagination'
 
-const PAGE_SIZE = 12
+const PAGE_SIZE = 8
 
 const SORT_OPTIONS = [
     { value: 'newest', label: 'Mới nhất' },
@@ -36,6 +36,7 @@ export default function SearchResultsPage() {
     const [error, setError] = useState(null)
     const [totalPages, setTotalPages] = useState(1)
     const [sortOption, setSortOption] = useState('newest')
+    const [totalCount, setTotalCount] = useState(0)
 
     const fetchResults = useCallback(async (kw, pageNum) => {
         if (!kw.trim()) {
@@ -50,10 +51,15 @@ export default function SearchResultsPage() {
                 filterProductsThunk({ keyword: kw.trim(), pageNumber: pageNum, pageSize: PAGE_SIZE })
             ).unwrap()
 
-            const list = Array.isArray(result?.data) ? result.data
-                : Array.isArray(result) ? result
-                    : []
-            const total = result?.totalPages ?? result?.totalPage ?? Math.ceil(list.length / PAGE_SIZE) ?? 1
+            // const list = Array.isArray(result?.data) ? result.data
+            //     : Array.isArray(result) ? result
+            //         : []
+            // const total = result?.totalPages ?? result?.totalPage ?? Math.ceil(list.length / PAGE_SIZE) ?? 1
+            const pagedData = result?.data || result; // Lấy đối tượng PagedResult
+            const list = pagedData?.data || [];       // Lấy danh sách sản phẩm từ trường Data
+            const totalItems = pagedData?.total || 0; // Lấy tổng số sản phẩm từ trường Total
+            const total = Math.ceil(totalItems / PAGE_SIZE); // Tính tổng số trang
+            setTotalCount(pagedData?.total || 0);
             setAllProducts(list)
             setTotalPages(Math.max(1, total))
         } catch (err) {
@@ -64,8 +70,13 @@ export default function SearchResultsPage() {
     }, [dispatch])
 
     useEffect(() => {
-        fetchResults(keyword, page)
-    }, [keyword, page, fetchResults])
+        const pageInUrl = searchParams.get('page');
+        if (keyword && !pageInUrl) {
+            setSearchParams({ keyword, page: '1' }, { replace: true });
+        } else {
+            fetchResults(keyword, page);
+        }
+    }, [keyword, page, searchParams, setSearchParams, fetchResults]);
 
     const displayProducts = sortProducts(allProducts, sortOption)
 
@@ -102,7 +113,7 @@ export default function SearchResultsPage() {
                         <span className="inline-block h-4 w-32 rounded bg-slate-200 animate-pulse" />
                     ) : keyword ? (
                         <span className="text-sm text-slate-500">
-                            Tìm thấy <span className="font-extrabold text-slate-800">{displayProducts.length}</span> sản phẩm
+                            Tìm thấy <span className="font-extrabold text-slate-800">{totalCount}</span> sản phẩm
                         </span>
                     ) : null}
                 </div>

@@ -26,9 +26,9 @@ export class OrderService extends BaseServices {
 
     /**
      * Lấy danh sách lịch sử đơn hàng
-     * GET /api/Order
+     * GET /api/My/orders
      */
-    getMyOrders = () => this.get('api/My/orders')
+    getMyOrders = ({ page = 1, pageSize = 10 } = {}) => this.get('api/My/orders', { params: { page, pageSize } })
 
     /**
      * Hủy đơn hàng.

@@ -19,6 +19,7 @@ const initialState = {
 
     // Lịch sử đơn hàng
     myOrders: [],
+    totalOrders: 0,
     loadingOrders: false,
     myOrdersError: null,
     
@@ -79,7 +80,7 @@ const orderSlice = createSlice({
             .addCase(createOrderThunk.fulfilled, (state, action) => {
                 state.submitting = false
                 state.orderSuccess = true
-                console.log(action.payload)
+                //console.log(action.payload)
                 state.createdOrder = action.payload ?? null
             })
             .addCase(createOrderThunk.rejected, (state, action) => {
@@ -94,7 +95,9 @@ const orderSlice = createSlice({
             })
             .addCase(fetchMyOrdersThunk.fulfilled, (state, action) => {
                 state.loadingOrders = false
-                state.myOrders = action.payload
+                state.myOrders = action.payload.data ?? []
+                state.totalOrders = action.payload.total ?? 0
+                console.log(state.myOrders)
             })
             .addCase(fetchMyOrdersThunk.rejected, (state, action) => {
                 state.loadingOrders = false
