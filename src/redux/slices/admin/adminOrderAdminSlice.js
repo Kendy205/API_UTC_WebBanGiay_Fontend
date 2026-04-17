@@ -3,6 +3,7 @@ import {
     fetchAdminOrdersThunk,
     fetchAdminOrderByIdThunk,
     updateAdminOrderThunk,
+    updateAdminOrderStatusThunk,
     deleteAdminOrderThunk,
 } from '../../actions/admin/adminOrderAdminAction'
 
@@ -28,6 +29,10 @@ const adminOrderAdminSlice = createSlice({
             })
             .addCase(fetchAdminOrderByIdThunk.rejected, (s, a) => { s.loadingDetail = false; s.error = a.payload })
             .addCase(updateAdminOrderThunk.fulfilled, (s, a) => {
+                const idx = s.items.findIndex((x) => x.id === a.payload.id)
+                if (idx !== -1) s.items[idx] = { ...s.items[idx], ...a.payload }
+            })
+            .addCase(updateAdminOrderStatusThunk.fulfilled, (s, a) => {
                 const idx = s.items.findIndex((x) => x.id === a.payload.id)
                 if (idx !== -1) s.items[idx] = { ...s.items[idx], ...a.payload }
             })

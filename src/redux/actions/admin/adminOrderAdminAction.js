@@ -37,6 +37,18 @@ export const updateAdminOrderThunk = createAsyncThunk(
     }
 )
 
+export const updateAdminOrderStatusThunk = createAsyncThunk(
+    'adminOrderAdmin/updateStatus',
+    async ({ id, status }, { rejectWithValue }) => {
+        try {
+            const res = await adminOrderAdminService.updateStatus(id, status)
+            return res.data?.data ?? res.data
+        } catch (e) {
+            return rejectWithValue(e?.response?.data?.message ?? 'Lỗi cập nhật trạng thái đơn hàng')
+        }
+    }
+)
+
 export const deleteAdminOrderThunk = createAsyncThunk(
     'adminOrderAdmin/delete',
     async (id, { rejectWithValue }) => {

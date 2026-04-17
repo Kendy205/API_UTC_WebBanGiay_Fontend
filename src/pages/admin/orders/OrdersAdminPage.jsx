@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { message } from 'antd'
 import { PageHeader, Table, SearchBar, badge, STATUS_COLOR, fmt, fmtDate, Modal, Btn } from '../adminShared'
 import Pagination from '../../../components/common/Pagination'
-import { fetchAdminOrdersThunk, updateAdminOrderThunk, fetchAdminOrderByIdThunk } from '../../../redux/actions/admin/adminOrderAdminAction'
+import { fetchAdminOrdersThunk, updateAdminOrderStatusThunk, fetchAdminOrderByIdThunk } from '../../../redux/actions/admin/adminOrderAdminAction'
 import { clearSelectedOrder } from '../../../redux/slices/admin/adminOrderAdminSlice'
 
 const ORDER_STATUSES = ['Pending', 'Confirmed', 'Shipping', 'Completed', 'Cancelled']
@@ -39,22 +39,8 @@ export default function OrdersAdminPage() {
 
     const handleStatus = async (row, newStatus) => {
         try {
-            await dispatch(updateAdminOrderThunk({
-                id: row.id,
-                data: {
-                    orderCode: row.id.toString(), // Gửi ID tạm nếu ko có Code
-                    orderStatus: newStatus,
-                    paymentStatus: row.paymentMethod === 'Banking' ? 'Paid' : 'Pending',
-                    shippingAddressId: 0
-                }
-            })).unwrap()
+            await dispatch(updateAdminOrderStatusThunk({ id: row.id, status: newStatus })).unwrap()
             message.success('Cập nhật trạng thái thành công!')
-            dispatch(fetchAdminOrdersThunk({
-                Page: page,
-                PageSize: pageSize,
-                Status: statusFilter || undefined,
-                Search: debouncedSearch || undefined
-            }))
         } catch (e) {
             message.error(e || 'Lỗi cập nhật trạng thái')
         }

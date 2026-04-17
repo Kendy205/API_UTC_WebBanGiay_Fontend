@@ -17,6 +17,7 @@ export class AdminOrderAdminService extends BaseServices {
     getAll = (params = {}) => this.get('/api/Admin/Orders', { params })
     getById = (id) => this.get(`/api/Admin/Orders/${id}`)
     update = (id, data) => this.put(`/api/Admin/Orders/${id}`, data)
+    updateStatus = (id, status) => this.put(`/api/Admin/Orders/${id}/status`, { status })
     remove = (id) => this.delete(`/api/Admin/Orders/${id}`)
 }
 
