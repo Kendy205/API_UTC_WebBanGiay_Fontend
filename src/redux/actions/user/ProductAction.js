@@ -3,12 +3,10 @@ import { productService } from "../../../services/user/ProductService";
 
 export const getProducts = createAsyncThunk(
     'products/getProducts',
-    async (_, { rejectWithValue }) => {
+    async ({ page = 1, pageSize = 10 } = {}, { rejectWithValue }) => {
         try {
-            // Gọi API để lấy danh sách sản phẩm
-            const response = await productService.getProducts();
-            
-            return response.data; // Trả về dữ liệu sản phẩm
+            const response = await productService.getProducts({ page, pageSize });
+            return response.data;
         }
         catch (error) {
             return rejectWithValue(error.message || 'Failed to fetch products');

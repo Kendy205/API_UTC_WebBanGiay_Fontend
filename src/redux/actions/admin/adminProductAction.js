@@ -114,3 +114,27 @@ export const fetchAdminSizesThunk = createAsyncThunk(
         }
     }
 )
+
+export const fetchInventoryMovementsThunk = createAsyncThunk(
+    'adminProduct/fetchInventory',
+    async (params, { rejectWithValue }) => {
+        try {
+            const res = await adminProductService.getInventoryMovements(params)
+            return res.data?.data ?? res.data
+        } catch (e) {
+            return rejectWithValue(e?.response?.data?.message ?? 'Lỗi tải lịch sử nhập xuất kho')
+        }
+    }
+)
+
+export const createInventoryMovementThunk = createAsyncThunk(
+    'adminProduct/createInventory',
+    async (data, { rejectWithValue }) => {
+        try {
+            const res = await adminProductService.createInventoryMovement(data)
+            return res.data?.data ?? res.data
+        } catch (e) {
+            return rejectWithValue(e?.response?.data?.message ?? 'Lỗi tạo phiếu nhập/xuất kho')
+        }
+    }
+)

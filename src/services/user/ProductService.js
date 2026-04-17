@@ -6,9 +6,8 @@ export class ProductService extends BaseServices
     {
         super();
     }
-    getProducts =()=>
-    {
-        return this.get('api/Product');
+    getProducts = ({ page = 1, pageSize = 10 } = {}) => {
+        return this.get('api/Product', { params: { page, pageSize } });
     }
     getProductById = (productId) => {
         return this.get(`api/Product/${productId}`);

@@ -57,11 +57,11 @@ const NAV_GROUPS = [
                 to: '/admin/categories',
                 icon: 'M4 6h16M4 10h16M4 14h16M4 18h16',
             },
-            // {
-            //     label: 'Tồn kho',
-            //     to: '/admin/inventory',
-            //     icon: ['M5 8h14', 'M5 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M19 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M5 8v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8', 'M10 12h4'],
-            // },
+            {
+                label: 'Tồn kho',
+                to: '/admin/inventory',
+                icon: ['M5 8h14', 'M5 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M19 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M5 8v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8', 'M10 12h4'],
+            },
             // {
             //     label: 'Khuyến mãi',
             //     to: '/admin/promotions',

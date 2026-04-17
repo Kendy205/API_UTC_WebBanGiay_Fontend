@@ -22,7 +22,7 @@ import AnalyticsPage from './pages/admin/analytics/AnalyticsPage'
 import ReportsPage from './pages/admin/reports/ReportsPage'
 import ProductsAdminPage from './pages/admin/products/ProductsAdminPage'
 import CategoriesPage from './pages/admin/categories/CategoriesPage'
-//import InventoryPage from './pages/admin/inventory/InventoryPage'
+import InventoryPage from './pages/admin/inventory/InventoryPage'
 //import PromotionsPage from './pages/admin/promotions/PromotionsPage'
 import OrdersAdminPage from './pages/admin/orders/OrdersAdminPage'
 import PaymentsPage from './pages/admin/payments/PaymentsPage'
@@ -77,7 +77,7 @@ function App() {
                             <Route path="reports" element={<ReportsPage />} />
                             <Route path="products" element={<ProductsAdminPage />} />
                             <Route path="categories" element={<CategoriesPage />} />
-                            {/* <Route path="inventory" element={<InventoryPage />} /> */}
+                            <Route path="inventory" element={<InventoryPage />} />
                             {/* <Route path="promotions" element={<PromotionsPage />} /> */}
                             <Route path="orders" element={<OrdersAdminPage />} />
                             <Route path="payments" element={<PaymentsPage />} />

@@ -9,6 +9,8 @@ import {
     deleteAdminVariantThunk,
     fetchAdminColorsThunk,
     fetchAdminSizesThunk,
+    fetchInventoryMovementsThunk,
+    createInventoryMovementThunk,
 } from '../../actions/admin/adminProductAction'
 
 const adminProductSlice = createSlice({
@@ -17,6 +19,11 @@ const adminProductSlice = createSlice({
         items: [],
         colors: [],
         sizes: [],
+        inventory: [],
+        inventoryTotal: 0,
+        inventoryPage: 1,
+        inventoryTotalPages: 1,
+        inventoryLoading: false,
         total: 0,
         page: 1,
         pageSize: 10,
@@ -84,6 +91,21 @@ const adminProductSlice = createSlice({
             })
             .addCase(fetchAdminSizesThunk.fulfilled, (s, a) => {
                 s.sizes = a.payload.data ?? a.payload
+            })
+            // Inventory Movements
+            .addCase(fetchInventoryMovementsThunk.pending, (s) => { s.inventoryLoading = true })
+            .addCase(fetchInventoryMovementsThunk.fulfilled, (s, a) => {
+                s.inventoryLoading = false
+                const p = a.payload || {}
+                s.inventory = p.items ?? p.data ?? (Array.isArray(p) ? p : [])
+                s.inventoryTotal = p.totalCount ?? p.total ?? s.inventory.length
+                s.inventoryPage = p.currentPage ?? p.page ?? s.inventoryPage
+                s.inventoryTotalPages = p.totalPages ?? (Math.ceil(s.inventoryTotal / 10) || 1)
+            })
+            .addCase(fetchInventoryMovementsThunk.rejected, (s) => { s.inventoryLoading = false })
+            .addCase(createInventoryMovementThunk.fulfilled, (s, a) => {
+                if (a.payload) s.inventory.unshift(a.payload)
+                s.inventoryTotal += 1
             })
     },
 })

@@ -42,6 +42,10 @@ export class AdminProductService extends BaseServices {
     // Attributes
     getColors = () => this.get('/api/Color')
     getSizes = () => this.get('/api/Size')
+
+    // Inventory Movements
+    getInventoryMovements = (params = {}) => this.get('/api/Admin/inventory', { params })
+    createInventoryMovement = (data) => this.post('/api/Admin/inventory', data)
 }
 
 

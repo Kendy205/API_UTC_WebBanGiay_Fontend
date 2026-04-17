@@ -1,10 +1,32 @@
 import React from 'react';
 
+/**
+ * Smart pagination with ellipsis:
+ * Always shows: first, last, current ±2 neighbors, and "..." separators.
+ */
+function getPageRange(currentPage, totalPages) {
+    const delta = 2;
+    const range = [];
+    const left = Math.max(2, currentPage - delta);
+    const right = Math.min(totalPages - 1, currentPage + delta);
+
+    range.push(1);
+    if (left > 2) range.push('...');
+    for (let i = left; i <= right; i++) range.push(i);
+    if (right < totalPages - 1) range.push('...');
+    if (totalPages > 1) range.push(totalPages);
+
+    return range;
+}
+
 export default function Pagination({ currentPage, totalPages, onPageChange }) {
     if (totalPages <= 1) return null;
 
+    const pages = getPageRange(currentPage, totalPages);
+
     return (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            {/* Prev */}
             <button
                 type="button"
                 onClick={() => onPageChange(Math.max(1, currentPage - 1))}
@@ -17,29 +39,32 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
                 </svg>
             </button>
 
-            {Array.from({ length: totalPages }).slice(0, 7).map((_, i) => {
-                const p = i + 1;
-                const active = p === currentPage;
-                return (
+            {/* Page numbers */}
+            {pages.map((p, idx) =>
+                p === '...' ? (
+                    <span
+                        key={`ellipsis-${idx}`}
+                        className="flex h-10 w-10 items-center justify-center text-sm font-medium text-slate-400"
+                    >
+                        …
+                    </span>
+                ) : (
                     <button
                         key={p}
                         type="button"
                         onClick={() => onPageChange(p)}
                         className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-all ${
-                            active
+                            p === currentPage
                                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-600/20'
                                 : 'border border-slate-200 bg-white text-slate-700 hover:border-indigo-300 hover:text-indigo-600 focus:ring-2 focus:ring-indigo-500/20'
                         }`}
                     >
                         {p}
                     </button>
-                );
-            })}
-
-            {totalPages > 7 && (
-                <span className="flex h-10 w-10 items-center justify-center text-sm font-medium text-slate-400">…</span>
+                )
             )}
 
+            {/* Next */}
             <button
                 type="button"
                 onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}

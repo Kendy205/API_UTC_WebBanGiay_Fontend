@@ -1,18 +1,21 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux';
 import { getProducts } from '../../redux/actions/user/ProductAction';
+import { fetchBrandsThunk } from '../../redux/actions/user/brandAction';
+import { fetchCategoriesThunk } from '../../redux/actions/user/categoryAction';
 import ProductCard from './ProductCard';
 import Skeleton from '../loading/Skeleton';
 import Pagination from '../common/Pagination';
 
 export default function ProductList() {
-    const { products, error } = useSelector((state) => state.product)
+    const { products, totalPages, total, error } = useSelector((state) => state.product)
+    const { items: categories } = useSelector((state) => state.category)
+    const { items: brands } = useSelector((state) => state.brand)
     const isApiLoading = useSelector((state) => state.ui.loadingCount > 0)
 
     const dispatch = useDispatch();
     const [page, setPage] = useState(1)
-    const pageSize = 12 // Change to 12 for better grid matching (3 or 4 cols)
-    const [isPageLoading, setIsPageLoading] = useState(false)
+    const PAGE_SIZE = 12
 
     // States cho Filter & Sort
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -20,47 +23,32 @@ export default function ProductList() {
     const [selectedBrandId, setSelectedBrandId] = useState(null)
     const [sortOption, setSortOption] = useState('newest')
 
-    const goToPage = (nextPage) => {
-        setIsPageLoading(true)
-        setPage(nextPage)
-        setTimeout(() => setIsPageLoading(false), 300)
-    }
-
-    const showSkeleton = isPageLoading || isApiLoading
-
+    // Gọi API mỗi khi page thay đổi
     useEffect(() => {
-        dispatch(getProducts());
+        dispatch(getProducts({ page, pageSize: PAGE_SIZE }));
+    }, [dispatch, page])
+
+    // Gọi API lấy danh mục và thương hiệu khi mount
+    useEffect(() => {
+        dispatch(fetchBrandsThunk());
+        dispatch(fetchCategoriesThunk());
     }, [dispatch])
 
-    // Lấy options danh mục và thương hiệu từ danh sách sản phẩm
-    const categories = useMemo(() => {
-        if (!products) return []
-        const unique = new Map()
-        products.forEach(p => {
-            if (p.categoryId && p.categoryName) {
-                unique.set(p.categoryId, p.categoryName)
-            }
-        })
-        return Array.from(unique.entries()).map(([id, name]) => ({ id, name }))
-    }, [products])
+    // Reset về trang 1 khi filter thay đổi
+    useEffect(() => {
+        setPage(1)
+    }, [selectedCategoryId, selectedBrandId, sortOption])
 
-    const brands = useMemo(() => {
-        if (!products) return []
-        const unique = new Map()
-        products.forEach(p => {
-            if (p.brandId && p.brandName) {
-                unique.set(p.brandId, p.brandName)
-            }
-        })
-        return Array.from(unique.entries()).map(([id, name]) => ({ id, name }))
-    }, [products])
+    const goToPage = (nextPage) => {
+        setPage(nextPage)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
 
-    // Lọc và Sắp xếp
-    const filteredAndSortedProducts = useMemo(() => {
+    // Client-side filter & sort trên data của trang hiện tại
+    const displayedProducts = useMemo(() => {
         if (!products) return []
         let result = [...products]
 
-        // Filter
         if (selectedCategoryId) {
             result = result.filter(p => p.categoryId === selectedCategoryId)
         }
@@ -68,7 +56,6 @@ export default function ProductList() {
             result = result.filter(p => p.brandId === selectedBrandId)
         }
 
-        // Sort
         if (sortOption === 'priceAsc') {
             result.sort((a, b) => (a.salePrice ?? a.basePrice ?? 0) - (b.salePrice ?? b.basePrice ?? 0))
         } else if (sortOption === 'priceDesc') {
@@ -80,19 +67,7 @@ export default function ProductList() {
         return result
     }, [products, selectedCategoryId, selectedBrandId, sortOption])
 
-    const totalItems = filteredAndSortedProducts.length
-    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-    const safePage = Math.min(Math.max(1, page), totalPages)
 
-    const pagedProducts = useMemo(() => {
-        const start = (safePage - 1) * pageSize
-        return filteredAndSortedProducts.slice(start, start + pageSize)
-    }, [filteredAndSortedProducts, safePage])
-
-    // Lắng nghe thay đổi filter để reset về page 1
-    useEffect(() => {
-        setPage(1)
-    }, [selectedCategoryId, selectedBrandId, sortOption])
 
     return (
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row gap-8 min-h-[calc(100vh-150px)] pb-8 mt-4">
@@ -103,7 +78,7 @@ export default function ProductList() {
                     <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm">
                         <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-800">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" className="text-indigo-500">
-                                <path fillRule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+                                <path fillRule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z" />
                             </svg>
                             Danh Mục
                         </h3>
@@ -111,24 +86,22 @@ export default function ProductList() {
                             <li>
                                 <button
                                     onClick={() => setSelectedCategoryId(null)}
-                                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${
-                                        selectedCategoryId === null ? 'bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-100' : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
-                                    }`}
+                                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${selectedCategoryId === null ? 'bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-100' : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
+                                        }`}
                                 >
                                     Tất cả sản phẩm
                                     {selectedCategoryId === null && <span className="h-1.5 w-1.5 rounded-full bg-indigo-600"></span>}
                                 </button>
                             </li>
                             {categories.map((cat) => (
-                                <li key={cat.id}>
+                                <li key={cat.categoryId}>
                                     <button
-                                        onClick={() => setSelectedCategoryId(cat.id)}
-                                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${
-                                            selectedCategoryId === cat.id ? 'bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-100' : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
-                                        }`}
+                                        onClick={() => setSelectedCategoryId(cat.categoryId)}
+                                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${selectedCategoryId === cat.categoryId ? 'bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-100' : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
+                                            }`}
                                     >
-                                        {cat.name}
-                                        {selectedCategoryId === cat.id && <span className="h-1.5 w-1.5 rounded-full bg-indigo-600"></span>}
+                                        {cat.categoryName}
+                                        {selectedCategoryId === cat.categoryId && <span className="h-1.5 w-1.5 rounded-full bg-indigo-600"></span>}
                                     </button>
                                 </li>
                             ))}
@@ -139,8 +112,8 @@ export default function ProductList() {
                     <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm">
                         <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-800">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" className="text-pink-500">
-                                <path d="M2.5 1A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h6.086a1.5 1.5 0 0 0 1.06-.44l4.915-4.914A1.5 1.5 0 0 0 15 8.586V2.5A1.5 1.5 0 0 0 13.5 1h-11zM2 2.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 .5.5v6.086a.5.5 0 0 1-.146.353l-4.915 4.914A.5.5 0 0 1 8.586 14H2.5a.5.5 0 0 1-.5-.5v-11z"/>
-                                <path d="M5 5.5A1.5 1.5 0 1 1 6.5 4 1.5 1.5 0 0 1 5 5.5z"/>
+                                <path d="M2.5 1A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h6.086a1.5 1.5 0 0 0 1.06-.44l4.915-4.914A1.5 1.5 0 0 0 15 8.586V2.5A1.5 1.5 0 0 0 13.5 1h-11zM2 2.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 .5.5v6.086a.5.5 0 0 1-.146.353l-4.915 4.914A.5.5 0 0 1 8.586 14H2.5a.5.5 0 0 1-.5-.5v-11z" />
+                                <path d="M5 5.5A1.5 1.5 0 1 1 6.5 4 1.5 1.5 0 0 1 5 5.5z" />
                             </svg>
                             Thương Hiệu
                         </h3>
@@ -148,24 +121,22 @@ export default function ProductList() {
                             <li>
                                 <button
                                     onClick={() => setSelectedBrandId(null)}
-                                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${
-                                        selectedBrandId === null ? 'bg-pink-50 text-pink-700 shadow-sm ring-1 ring-pink-100' : 'text-slate-600 hover:bg-slate-50 hover:text-pink-600'
-                                    }`}
+                                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${selectedBrandId === null ? 'bg-pink-50 text-pink-700 shadow-sm ring-1 ring-pink-100' : 'text-slate-600 hover:bg-slate-50 hover:text-pink-600'
+                                        }`}
                                 >
                                     Tất cả thương hiệu
                                     {selectedBrandId === null && <span className="h-1.5 w-1.5 rounded-full bg-pink-500"></span>}
                                 </button>
                             </li>
                             {brands.map((brand) => (
-                                <li key={brand.id}>
+                                <li key={brand.brandId}>
                                     <button
-                                        onClick={() => setSelectedBrandId(brand.id)}
-                                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${
-                                            selectedBrandId === brand.id ? 'bg-pink-50 text-pink-700 shadow-sm ring-1 ring-pink-100' : 'text-slate-600 hover:bg-slate-50 hover:text-pink-600'
-                                        }`}
+                                        onClick={() => setSelectedBrandId(brand.brandId)}
+                                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${selectedBrandId === brand.brandId ? 'bg-pink-50 text-pink-700 shadow-sm ring-1 ring-pink-100' : 'text-slate-600 hover:bg-slate-50 hover:text-pink-600'
+                                            }`}
                                     >
-                                        {brand.name}
-                                        {selectedBrandId === brand.id && <span className="h-1.5 w-1.5 rounded-full bg-pink-500"></span>}
+                                        {brand.brandName}
+                                        {selectedBrandId === brand.brandId && <span className="h-1.5 w-1.5 rounded-full bg-pink-500"></span>}
                                     </button>
                                 </li>
                             ))}
@@ -189,7 +160,8 @@ export default function ProductList() {
                             {isSidebarOpen ? 'Ẩn bộ lọc' : 'Hiện bộ lọc'}
                         </button>
                         <div className="text-sm text-slate-500 hidden sm:block">
-                            Tìm thấy <span className="font-extrabold text-slate-800">{totalItems}</span> sản phẩm
+                            <span className="font-extrabold text-slate-800">{total}</span> sản phẩm
+                            &nbsp;·&nbsp;Trang <span className="font-extrabold text-slate-800">{page}</span> / {totalPages}
                         </div>
                     </div>
 
@@ -216,7 +188,7 @@ export default function ProductList() {
                 )}
 
                 {/* Product Grid */}
-                {totalItems === 0 && !showSkeleton && !error ? (
+                {displayedProducts.length === 0 && !isApiLoading && !error ? (
                     <div className="flex flex-1 flex-col items-center justify-center py-12 text-center text-neutral-500 bg-white rounded-lg border border-dashed">
                         <span className="text-4xl mb-3">📭</span>
                         <p>Không tìm thấy sản phẩm nào phù hợp.</p>
@@ -229,13 +201,13 @@ export default function ProductList() {
                     </div>
                 ) : (
                     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-                        {showSkeleton
-                            ? Array.from({ length: Math.min(pageSize, 6) }).map((_, idx) => (
+                        {isApiLoading
+                            ? Array.from({ length: PAGE_SIZE }).map((_, idx) => (
                                 <li key={idx}>
                                     <Skeleton />
                                 </li>
                             ))
-                            : pagedProducts.map((product) => (
+                            : displayedProducts.map((product) => (
                                 <ProductCard
                                     key={product.productId ?? product.id}
                                     product={product}
@@ -244,10 +216,10 @@ export default function ProductList() {
                     </ul>
                 )}
 
-                {totalItems > pageSize && (
+                {totalPages > 1 && (
                     <div className="mt-8 flex justify-center pb-6">
                         <Pagination
-                            currentPage={safePage}
+                            currentPage={page}
                             totalPages={totalPages}
                             onPageChange={goToPage}
                         />

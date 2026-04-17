@@ -79,6 +79,7 @@ const orderSlice = createSlice({
             .addCase(createOrderThunk.fulfilled, (state, action) => {
                 state.submitting = false
                 state.orderSuccess = true
+                console.log(action.payload)
                 state.createdOrder = action.payload ?? null
             })
             .addCase(createOrderThunk.rejected, (state, action) => {

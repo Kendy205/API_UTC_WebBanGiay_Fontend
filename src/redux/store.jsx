@@ -5,6 +5,8 @@ import uiReducer from './slices/uiSlice'
 import cartReducer from './slices/user/cartSlice'
 import orderReducer from './slices/user/orderSlice'
 import reviewReducer from './slices/user/reviewSlice'
+import brandReducer from './slices/user/brandSlice'
+import categoryReducer from './slices/user/categorySlice'
 
 // Admin reducers
 import adminProductReducer from './slices/admin/adminProductSlice'
@@ -26,6 +28,8 @@ export const store = configureStore({
         cart: cartReducer,
         order: orderReducer,
         review: reviewReducer,
+        brand: brandReducer,
+        category: categoryReducer,
         // Admin
         adminProduct: adminProductReducer,
         adminCategory: adminCategoryReducer,
