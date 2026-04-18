@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { getProducts, getProductById } from '../../actions/user/ProductAction';
+import { getProducts, getProductById, filterProductsThunk } from '../../actions/user/ProductAction';
 
 const initialState = {
     products: [],
@@ -13,21 +13,30 @@ export const productSlice = createSlice({
     initialState,
     reducers: {},
     extraReducers: (builder) => {
+        // Handle common fulfillment logic
+        const handleFulfilled = (state, action) => {
+            const inner = action.payload?.data;
+            state.products = inner?.data ?? [];
+            state.total = inner?.total ?? 0;
+            state.totalPages = inner?.pageSize > 0
+                ? Math.ceil(inner.total / inner.pageSize)
+                : 1;
+        };
+
         builder
             .addCase(getProducts.pending, (state) => {
                 state.error = null;
             })
-            .addCase(getProducts.fulfilled, (state, action) => {
-                // action.payload = ApiResponse { success, data: { data:[], total, page, pageSize } }
-                const inner = action.payload?.data;
-                state.products = inner?.data ?? [];
-                state.total = inner?.total ?? 0;
-                state.totalPages = inner?.pageSize > 0
-                    ? Math.ceil(inner.total / inner.pageSize)
-                    : 1;
-            })
+            .addCase(getProducts.fulfilled, handleFulfilled)
             .addCase(getProducts.rejected, (state, action) => {
                 state.error = action.payload || 'Không tải được danh sách sản phẩm';
+            })
+            .addCase(filterProductsThunk.pending, (state) => {
+                state.error = null;
+            })
+            .addCase(filterProductsThunk.fulfilled, handleFulfilled)
+            .addCase(filterProductsThunk.rejected, (state, action) => {
+                state.error = action.payload || 'Không tìm thấy sản phẩm theo bộ lọc';
             })
     }
 })

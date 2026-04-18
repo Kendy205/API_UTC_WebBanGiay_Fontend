@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux';
-import { getProducts } from '../../redux/actions/user/ProductAction';
+import { getProducts, filterProductsThunk } from '../../redux/actions/user/ProductAction';
 import { fetchBrandsThunk } from '../../redux/actions/user/brandAction';
 import { fetchCategoriesThunk } from '../../redux/actions/user/categoryAction';
 import ProductCard from './ProductCard';
@@ -15,7 +15,7 @@ export default function ProductList() {
 
     const dispatch = useDispatch();
     const [page, setPage] = useState(1)
-    const PAGE_SIZE = 12
+    const PAGE_SIZE = 9
 
     // States cho Filter & Sort
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -23,10 +23,21 @@ export default function ProductList() {
     const [selectedBrandId, setSelectedBrandId] = useState(null)
     const [sortOption, setSortOption] = useState('newest')
 
-    // Gọi API mỗi khi page thay đổi
+    // Gọi API mỗi khi page hoặc filter thay đổi
     useEffect(() => {
-        dispatch(getProducts({ page, pageSize: PAGE_SIZE }));
-    }, [dispatch, page])
+        if (selectedCategoryId === null && selectedBrandId === null) {
+            // Trường hợp ban đầu hoặc không chọn filter: dùng getProducts
+            dispatch(getProducts({ page, pageSize: PAGE_SIZE }));
+        } else {
+            // Có chọn brand hoặc category: dùng filterProductsThunk với pageNumber
+            dispatch(filterProductsThunk({
+                pageNumber: page,
+                pageSize: PAGE_SIZE,
+                categoryId: selectedCategoryId,
+                brandId: selectedBrandId
+            }));
+        }
+    }, [dispatch, page, selectedCategoryId, selectedBrandId])
 
     // Gọi API lấy danh mục và thương hiệu khi mount
     useEffect(() => {
@@ -44,17 +55,10 @@ export default function ProductList() {
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
-    // Client-side filter & sort trên data của trang hiện tại
+    // Client-side sort trên data đã được server lọc
     const displayedProducts = useMemo(() => {
         if (!products) return []
         let result = [...products]
-
-        if (selectedCategoryId) {
-            result = result.filter(p => p.categoryId === selectedCategoryId)
-        }
-        if (selectedBrandId) {
-            result = result.filter(p => p.brandId === selectedBrandId)
-        }
 
         if (sortOption === 'priceAsc') {
             result.sort((a, b) => (a.salePrice ?? a.basePrice ?? 0) - (b.salePrice ?? b.basePrice ?? 0))
@@ -65,7 +69,7 @@ export default function ProductList() {
         }
 
         return result
-    }, [products, selectedCategoryId, selectedBrandId, sortOption])
+    }, [products, sortOption])
 
 
 

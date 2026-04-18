@@ -22,6 +22,7 @@ import AnalyticsPage from './pages/admin/analytics/AnalyticsPage'
 import ReportsPage from './pages/admin/reports/ReportsPage'
 import ProductsAdminPage from './pages/admin/products/ProductsAdminPage'
 import CategoriesPage from './pages/admin/categories/CategoriesPage'
+import BrandsPage from './pages/admin/brands/BrandsPage'
 import InventoryPage from './pages/admin/inventory/InventoryPage'
 //import PromotionsPage from './pages/admin/promotions/PromotionsPage'
 import OrdersAdminPage from './pages/admin/orders/OrdersAdminPage'
@@ -72,11 +73,12 @@ function App() {
                         }
                     >
                         <Route path="/admin" element={<AdminTemplate />}>
-                            <Route index element={<AdminDashboardPage />} />
+                            <Route index element={<AnalyticsPage />} />
                             <Route path="analytics" element={<AnalyticsPage />} />
                             <Route path="reports" element={<ReportsPage />} />
                             <Route path="products" element={<ProductsAdminPage />} />
                             <Route path="categories" element={<CategoriesPage />} />
+                            <Route path="brands" element={<BrandsPage />} />
                             <Route path="inventory" element={<InventoryPage />} />
                             {/* <Route path="promotions" element={<PromotionsPage />} /> */}
                             <Route path="orders" element={<OrdersAdminPage />} />

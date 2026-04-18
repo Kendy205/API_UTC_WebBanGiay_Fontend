@@ -3,25 +3,25 @@
 /**
  * AdminCategoryService
  *
- * GET  /api/Admin/categories
- *   â†’ [{ id, name, description, productCount, isActive }]
+ * GET /Admin/Category
+ *   → { success, data: [{ categoryId, categoryName, slug, isActive }] }
  *
- * POST /api/Admin/categories
- *   â† { name, description }
- *   â†’ { id, name, description }
+ * POST /Admin/Category
+ *   ← { categoryName, slug, isActive }
+ *   → { success, data: { ... } }
  *
- * PUT  /api/Admin/categories/{id}
- *   â† { name, description, isActive }
- *   â†’ { id, ... }
+ * PUT /Admin/Category/{id}
+ *   ← { categoryId, categoryName, slug, isActive }
+ *   → { success, ... }
  *
- * DELETE /api/Admin/categories/{id}
- *   â†’ { success: true }
+ * DELETE /Admin/Category/{id}
+ *   → { success: true }
  */
 export class AdminCategoryService extends BaseServices {
-    getAll = () => this.get('/api/Category')
-    create = (data) => this.post('/api/Category', data)
-    update = (id, data) => this.put(`/api/Category/${id}`, data)
-    remove = (id) => this.delete(`/api/Category/${id}`)
+    getAll = () => this.get('/api/Admin/Category')
+    create = (data) => this.post('/api/Admin/Category', data)
+    update = (id, data) => this.put(`/api/Admin/Category/${id}`, data)
+    remove = (id) => this.delete(`/api/Admin/Category/${id}`)
 }
 
 export const adminCategoryService = new AdminCategoryService()

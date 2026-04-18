@@ -30,6 +30,7 @@ export default function SearchResultsPage() {
 
     const keyword = searchParams.get('keyword') ?? ''
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
+    const sortInUrl = searchParams.get('sort') ?? 'newest';
 
     const [allProducts, setAllProducts] = useState([])
     const [isLoading, setIsLoading] = useState(false)
@@ -38,7 +39,7 @@ export default function SearchResultsPage() {
     const [sortOption, setSortOption] = useState('newest')
     const [totalCount, setTotalCount] = useState(0)
 
-    const fetchResults = useCallback(async (kw, pageNum) => {
+    const fetchResults = useCallback(async (kw, pageNum, currentSort) => {
         if (!kw.trim()) {
             setAllProducts([])
             setTotalPages(1)
@@ -48,17 +49,20 @@ export default function SearchResultsPage() {
         setError(null)
         try {
             const result = await dispatch(
-                filterProductsThunk({ keyword: kw.trim(), pageNumber: pageNum, pageSize: PAGE_SIZE })
+                filterProductsThunk({
+                    keyword: kw.trim(),
+                    pageNumber: pageNum, pageSize: PAGE_SIZE, sortBy: currentSort
+                })
             ).unwrap()
 
             // const list = Array.isArray(result?.data) ? result.data
             //     : Array.isArray(result) ? result
             //         : []
             // const total = result?.totalPages ?? result?.totalPage ?? Math.ceil(list.length / PAGE_SIZE) ?? 1
-            const pagedData = result?.data || result; // Lấy đối tượng PagedResult
-            const list = pagedData?.data || [];       // Lấy danh sách sản phẩm từ trường Data
-            const totalItems = pagedData?.total || 0; // Lấy tổng số sản phẩm từ trường Total
-            const total = Math.ceil(totalItems / PAGE_SIZE); // Tính tổng số trang
+            const pagedData = result?.data || result;
+            const list = pagedData?.data || [];
+            const totalItems = pagedData?.total || 0;
+            const total = Math.ceil(totalItems / PAGE_SIZE);
             setTotalCount(pagedData?.total || 0);
             setAllProducts(list)
             setTotalPages(Math.max(1, total))
@@ -69,22 +73,38 @@ export default function SearchResultsPage() {
         }
     }, [dispatch])
 
-    useEffect(() => {
-        const pageInUrl = searchParams.get('page');
-        if (keyword && !pageInUrl) {
-            setSearchParams({ keyword, page: '1' }, { replace: true });
-        } else {
-            fetchResults(keyword, page);
-        }
-    }, [keyword, page, searchParams, setSearchParams, fetchResults]);
+    // useEffect(() => {
+    //     const pageInUrl = searchParams.get('page');
 
-    const displayProducts = sortProducts(allProducts, sortOption)
+    //     if (keyword && !pageInUrl) {
+    //         setSearchParams({ keyword, page: '1' }, { replace: true });
+    //     } else {
+    //         fetchResults(keyword, page,sortOption);
+    //     }
+    // }, [keyword, page, sortOption ,searchParams, setSearchParams, fetchResults]);
+    useEffect(() => {
+        const sortInUrl = searchParams.get('sort');
+        if (sortInUrl && sortInUrl !== sortOption) {
+            setSortOption(sortInUrl);
+        }
+        if (keyword && !searchParams.get('page')) {
+            setSearchParams({ keyword, page: '1', sort: sortOption }, { replace: true });
+        } else {
+            fetchResults(keyword, page, sortOption);
+        }
+    }, [keyword, page, sortOption, searchParams, setSearchParams, fetchResults]);
+
+    const displayProducts = allProducts
 
     const handlePageChange = (nextPage) => {
-        setSearchParams({ keyword, page: String(nextPage) })
+        setSearchParams({ keyword, page: String(nextPage), sort: sortOption })
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }
-
+    const handleSortChange = (e) => {
+        const newSort = e.target.value;
+        setSortOption(newSort);
+        setSearchParams({ keyword, page: '1', sort: newSort });
+    }
     return (
         <div className="mx-auto max-w-7xl px-4 py-8">
 
@@ -122,7 +142,7 @@ export default function SearchResultsPage() {
                     <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 hidden sm:block">Sắp xếp:</span>
                     <select
                         value={sortOption}
-                        onChange={(e) => setSortOption(e.target.value)}
+                        onChange={handleSortChange}
                         className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 outline-none hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer transition-all appearance-none pr-8"
                         style={{
                             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E")`,

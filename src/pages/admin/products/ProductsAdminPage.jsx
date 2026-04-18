@@ -42,8 +42,12 @@ export default function ProductsAdminPage() {
     const [form, setForm] = useState(EMPTY)
 
     // --- State cho Modal Biến Thể ---
-    const [variantModalProduct, setVariantModalProduct] = useState(null) // null | object Product (from Redux)
-    const [variantsList, setVariantsList] = useState([]) // Mảng các biến thể hiển thị dạng list với metadata tạm
+    const [variantModalProduct, setVariantModalProduct] = useState(null)
+    const [variantsList, setVariantsList] = useState([])
+
+    // --- State cho Modal Xác Nhận Xóa ---
+    const [confirmModal, setConfirmModal] = useState(null)
+    // confirmModal = { type: 'product'|'variant', title, desc, onOk }
 
     // Fetch dữ liệu ban đầu
     useEffect(() => {
@@ -130,16 +134,24 @@ export default function ProductsAdminPage() {
         }
     }
 
-    const handleDelete = async (productId) => {
-        if (confirm('Xóa sản phẩm này và toàn bộ các biến thể của nó?')) {
-            try {
-                await dispatch(deleteAdminProductThunk(productId)).unwrap()
-                message.success('Đã xóa sản phẩm!')
-                dispatch(fetchAdminProductsThunk({ page, pageSize }))
-            } catch (error) {
-                message.error(error || 'Lỗi khi xóa sản phẩm!')
+    const handleDelete = (productId, productName) => {
+        setConfirmModal({
+            title: 'Xóa sản phẩm',
+            desc: `Bạn có chắc chắn muốn xóa sản phẩm "${productName}" và toàn bộ các biến thể của nó không? Hành động này không thể hoàn tác!`,
+            color: '#ef4444',
+            icon: '🗑️',
+            onOk: async () => {
+                try {
+                    await dispatch(deleteAdminProductThunk(productId)).unwrap()
+                    message.success('Đã xóa sản phẩm!')
+                    dispatch(fetchAdminProductsThunk({ page, pageSize }))
+                } catch (error) {
+                    message.error(error || 'Lỗi khi xóa sản phẩm!')
+                } finally {
+                    setConfirmModal(null)
+                }
             }
-        }
+        })
     }
 
     const f = (k) => (v) => setForm((prev) => ({ ...prev, [k]: v }))
@@ -169,9 +181,7 @@ export default function ProductsAdminPage() {
         })
     }
 
-    const handleDeleteRow = async (tempId, variantId) => {
-        if (!confirm('Bạn có chắc chắn muốn ẩn/xóa (ngưng hoạt động) biến thể này chứ?')) return;
-
+    const handleDeleteRow = (tempId, variantId) => {
         if (!variantId) {
             setVariantsList(p => p.filter(x => x._tempId !== tempId))
             return
@@ -180,32 +190,42 @@ export default function ProductsAdminPage() {
         const row = variantsList.find(v => v.variantId === variantId)
         if (!row) return;
 
-        const color = colors.find(c => String(c.colorId || c.id) === String(row.colorId));
-        const size = sizes.find(s => String(s.sizeId || s.id) === String(row.sizeId));
+        setConfirmModal({
+            title: 'Ngưng hoạt động biến thể',
+            desc: `Biến thể SKU "${row.sku || variantId}" sẽ bị ẩn khỏi cửa hàng. Bạn có chắc chắn không?`,
+            color: '#f59e0b',
+            icon: '⚠️',
+            onOk: async () => {
+                const color = colors.find(c => String(c.colorId || c.id) === String(row.colorId));
+                const size = sizes.find(s => String(s.sizeId || s.id) === String(row.sizeId));
 
-        const payload = {
-            variantId: Number(variantId),
-            productId: variantModalProduct.productId,
-            colorId: Number(row.colorId),
-            sizeId: Number(row.sizeId),
-            sku: row.sku || '',
-            stockQuantity: Number(row.stockQuantity || 0),
-            priceOverride: row.priceOverride ? Number(row.priceOverride) : 0,
-            isActive: false, // Soft-delete
-            sizeLabel: size?.sizeLabel || size?.label || size?.name || row.sizeLabel || '',
-            sizeSystem: size?.sizeSystem || row.sizeSystem || '',
-            colorName: color?.colorName || color?.name || row.colorName || '',
-            productName: variantModalProduct.productName || ''
-        }
+                const payload = {
+                    variantId: Number(variantId),
+                    productId: variantModalProduct.productId,
+                    colorId: Number(row.colorId),
+                    sizeId: Number(row.sizeId),
+                    sku: row.sku || '',
+                    stockQuantity: Number(row.stockQuantity || 0),
+                    priceOverride: row.priceOverride ? Number(row.priceOverride) : 0,
+                    isActive: false,
+                    sizeLabel: size?.sizeLabel || size?.label || size?.name || row.sizeLabel || '',
+                    sizeSystem: size?.sizeSystem || row.sizeSystem || '',
+                    colorName: color?.colorName || color?.name || row.colorName || '',
+                    productName: variantModalProduct.productName || ''
+                }
 
-        try {
-            await dispatch(updateAdminVariantThunk({ productId: variantModalProduct.productId, variantId, data: payload })).unwrap()
-            setVariantsList(p => p.map(x => x.variantId === variantId ? { ...x, isActive: false } : x))
-            message.success('Đã ngưng hoạt động biến thể!')
-            dispatch(fetchAdminProductsThunk({ page, pageSize }))
-        } catch (error) {
-            message.error(error || 'Lỗi khi thao tác!')
-        }
+                try {
+                    await dispatch(updateAdminVariantThunk({ productId: variantModalProduct.productId, variantId, data: payload })).unwrap()
+                    setVariantsList(p => p.map(x => x.variantId === variantId ? { ...x, isActive: false } : x))
+                    message.success('Đã ngưng hoạt động biến thể!')
+                    dispatch(fetchAdminProductsThunk({ page, pageSize }))
+                } catch (error) {
+                    message.error(error || 'Lỗi khi thao tác!')
+                } finally {
+                    setConfirmModal(null)
+                }
+            }
+        })
     }
 
     const handleConfirmRow = async (tempId) => {
@@ -290,7 +310,7 @@ export default function ProductsAdminPage() {
             render: (_, row) => (
                 <div style={{ display: 'flex', gap: '6px' }}>
                     <Btn small variant="secondary" onClick={() => openEdit(row)}>Sửa</Btn>
-                    <Btn small variant="danger" onClick={() => handleDelete(row.productId)}>Xóa</Btn>
+                    <Btn small variant="danger" onClick={() => handleDelete(row.productId, row.productName)}>Xóa</Btn>
                 </div>
             )
         },
@@ -494,6 +514,37 @@ export default function ProductsAdminPage() {
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
                     <Btn variant="secondary" onClick={() => setVariantModalProduct(null)}>Đóng cửa sổ</Btn>
+                </div>
+            </Modal>
+
+            {/* ── MODAL XÁC NHẬN XÓA ── */}
+            <Modal
+                open={!!confirmModal}
+                title={confirmModal?.title ?? ''}
+                onClose={() => setConfirmModal(null)}
+                width={420}
+            >
+                <div style={{ textAlign: 'center', padding: '8px 0 24px' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '12px' }}>{confirmModal?.icon}</div>
+                    <p style={{ margin: '0 0 24px', fontSize: '14px', color: '#475569', lineHeight: '1.6' }}>
+                        {confirmModal?.desc}
+                    </p>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+                        <Btn variant="secondary" onClick={() => setConfirmModal(null)}>Hủy bỏ</Btn>
+                        <button
+                            onClick={confirmModal?.onOk}
+                            style={{
+                                padding: '9px 24px', borderRadius: '10px', border: 'none',
+                                background: confirmModal?.color ?? '#ef4444',
+                                color: '#fff', fontWeight: '600', fontSize: '13px',
+                                cursor: 'pointer', transition: 'opacity 0.15s',
+                            }}
+                            onMouseOver={e => e.target.style.opacity = '0.85'}
+                            onMouseOut={e => e.target.style.opacity = '1'}
+                        >
+                            Xác nhận
+                        </button>
+                    </div>
                 </div>
             </Modal>
         </div>

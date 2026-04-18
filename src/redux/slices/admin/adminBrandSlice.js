@@ -1,5 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { fetchAdminBrandsThunk } from '../../actions/admin/adminBrandAction'
+import {
+    fetchAdminBrandsThunk,
+    createAdminBrandThunk,
+    updateAdminBrandThunk,
+} from '../../actions/admin/adminBrandAction'
 
 const adminBrandSlice = createSlice({
     name: 'adminBrand',
@@ -17,6 +21,13 @@ const adminBrandSlice = createSlice({
                 s.items = a.payload
             })
             .addCase(fetchAdminBrandsThunk.rejected, (s, a) => { s.loading = false; s.error = a.payload })
+            .addCase(createAdminBrandThunk.fulfilled, (s, a) => {
+                if (a.payload) s.items.unshift(a.payload)
+            })
+            .addCase(updateAdminBrandThunk.fulfilled, (s, a) => {
+                const idx = s.items.findIndex(x => x.brandId === a.payload?.brandId)
+                if (idx !== -1) s.items[idx] = a.payload
+            })
     },
 })
 

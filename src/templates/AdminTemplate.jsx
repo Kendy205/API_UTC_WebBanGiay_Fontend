@@ -27,13 +27,13 @@ const NAV_GROUPS = [
     {
         label: 'Tổng quan',
         items: [
+            // {
+            //     label: 'Dashboard',
+            //     to: '/admin',
+            //     icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
+            // },
             {
                 label: 'Dashboard',
-                to: '/admin',
-                icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
-            },
-            {
-                label: 'Phân tích',
                 to: '/admin/analytics',
                 icon: 'M18 20V10 M12 20V4 M6 20v-6',
             },
@@ -56,6 +56,11 @@ const NAV_GROUPS = [
                 label: 'Danh mục',
                 to: '/admin/categories',
                 icon: 'M4 6h16M4 10h16M4 14h16M4 18h16',
+            },
+            {
+                label: 'Thương hiệu',
+                to: '/admin/brands',
+                icon: ['M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z', 'M7 7h.01'],
             },
             {
                 label: 'Tồn kho',

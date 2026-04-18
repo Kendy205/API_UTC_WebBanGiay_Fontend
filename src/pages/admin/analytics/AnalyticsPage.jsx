@@ -62,7 +62,7 @@ export default function AnalyticsPage() {
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <PageHeader title="Phân tích" subtitle="Tổng quan hiệu suất kinh doanh" />
+                <PageHeader title="Dash broad" subtitle="Tổng quan hiệu suất kinh doanh" />
                 <div style={{ marginTop: '20px' }}>
                     <select
                         value={year}

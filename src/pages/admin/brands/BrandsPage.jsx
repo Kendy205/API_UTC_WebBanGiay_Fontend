@@ -2,69 +2,74 @@ import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { message } from 'antd'
 import { PageHeader, Btn, Table, Modal, FormField, Input, badge, Toggle } from '../adminShared'
-import { EMPTY } from './CategoriesShared'
 import {
-    fetchAdminCategoriesThunk,
-    createAdminCategoryThunk,
-    updateAdminCategoryThunk,
-} from '../../../redux/actions/admin/adminCategoryAction'
+    fetchAdminBrandsThunk,
+    createAdminBrandThunk,
+    updateAdminBrandThunk,
+} from '../../../redux/actions/admin/adminBrandAction'
 
-export default function CategoriesPage() {
+const EMPTY = { brandId: 0, brandName: '', slug: '', isActive: true }
+
+export default function BrandsPage() {
     const dispatch = useDispatch()
-    const { items, loading } = useSelector((s) => s.adminCategory)
+    const { items, loading } = useSelector((s) => s.adminBrand)
 
     const [modal, setModal] = useState(null)         // null | 'add' | 'edit'
     const [form, setForm] = useState(EMPTY)
-    const [confirmModal, setConfirmModal] = useState(null) // { category, onOk }
+    const [confirmModal, setConfirmModal] = useState(null) // { brand, onOk }
     const [search, setSearch] = useState('')
 
     useEffect(() => {
-        dispatch(fetchAdminCategoriesThunk())
+        dispatch(fetchAdminBrandsThunk())
     }, [dispatch])
 
     const openAdd = () => { setForm(EMPTY); setModal('add') }
-    const openEdit = (c) => { setForm({ ...c }); setModal('edit') }
+    const openEdit = (b) => { setForm({ ...b }); setModal('edit') }
 
     const handleSave = async () => {
-        if (!form.categoryName?.trim()) return message.warning('Vui lòng nhập tên danh mục!')
+        if (!form.brandName?.trim()) return message.warning('Vui lòng nhập tên thương hiệu!')
+
         try {
             const payload = {
-                categoryId: form.categoryId || 0,
-                categoryName: form.categoryName.trim(),
-                slug: form.slug?.trim() || '',
+                brandId: form.brandId || 0,
+                brandName: form.brandName.trim(),
+                slug: form.slug?.trim() || form.brandName.trim().toLowerCase().replace(/\s+/g, '-'),
                 isActive: form.isActive !== false,
+                createdAt: form.createdAt || new Date().toISOString(),
             }
+
             if (modal === 'add') {
-                await dispatch(createAdminCategoryThunk(payload)).unwrap()
-                message.success('Thêm danh mục thành công!')
+                await dispatch(createAdminBrandThunk(payload)).unwrap()
+                message.success('Thêm thương hiệu thành công!')
             } else {
-                await dispatch(updateAdminCategoryThunk({ id: form.categoryId, data: payload })).unwrap()
-                message.success('Cập nhật danh mục thành công!')
+                await dispatch(updateAdminBrandThunk({ id: form.brandId, data: payload })).unwrap()
+                message.success('Cập nhật thương hiệu thành công!')
             }
             setModal(null)
-            dispatch(fetchAdminCategoriesThunk())
+            dispatch(fetchAdminBrandsThunk())
         } catch (error) {
-            message.error(error || 'Lỗi khi lưu danh mục')
+            message.error(error || 'Lỗi khi lưu thương hiệu')
         }
     }
 
-    // Soft-delete: update isActive = false
-    const handleHide = (category) => {
+    // Soft-delete: gọi update với isActive = false
+    const handleDelete = (brand) => {
         setConfirmModal({
-            category,
+            brand,
             onOk: async () => {
                 try {
                     const payload = {
-                        categoryId: category.categoryId,
-                        categoryName: category.categoryName,
-                        slug: category.slug,
+                        brandId: brand.brandId,
+                        brandName: brand.brandName,
+                        slug: brand.slug,
                         isActive: false,
+                        createdAt: brand.createdAt || new Date().toISOString(),
                     }
-                    await dispatch(updateAdminCategoryThunk({ id: category.categoryId, data: payload })).unwrap()
-                    message.success(`Đã ẩn danh mục "${category.categoryName}"!`)
-                    dispatch(fetchAdminCategoriesThunk())
+                    await dispatch(updateAdminBrandThunk({ id: brand.brandId, data: payload })).unwrap()
+                    message.success(`Đã ẩn thương hiệu "${brand.brandName}"!`)
+                    dispatch(fetchAdminBrandsThunk())
                 } catch (error) {
-                    message.error(error || 'Lỗi khi ẩn danh mục')
+                    message.error(error || 'Lỗi khi ẩn thương hiệu')
                 } finally {
                     setConfirmModal(null)
                 }
@@ -72,38 +77,47 @@ export default function CategoriesPage() {
         })
     }
 
-    const handleReactivate = async (category) => {
-        try {
-            await dispatch(updateAdminCategoryThunk({
-                id: category.categoryId,
-                data: { ...category, isActive: true }
-            })).unwrap()
-            message.success('Đã kích hoạt lại danh mục!')
-            dispatch(fetchAdminCategoriesThunk())
-        } catch (error) {
-            message.error(error || 'Lỗi khi kích hoạt danh mục')
-        }
-    }
-
     const f = (k) => (v) => setForm((p) => ({ ...p, [k]: v }))
 
-    const filtered = items.filter(c =>
-        (c.categoryName || '').toLowerCase().includes(search.toLowerCase())
+    const filtered = items.filter(b =>
+        (b.brandName || '').toLowerCase().includes(search.toLowerCase())
     )
 
     const cols = [
-        { key: 'categoryId', label: '#', render: (v) => <span style={{ color: '#94a3b8' }}>#{v}</span> },
-        { key: 'categoryName', label: 'Tên danh mục', render: (v) => <span style={{ fontWeight: '600', color: '#1e293b' }}>{v}</span> },
-        { key: 'slug', label: 'Slug', render: (v) => <span style={{ color: '#64748b', fontFamily: 'monospace', fontSize: '12px' }}>{v}</span> },
-        { key: 'isActive', label: 'Trạng thái', render: (v) => <span style={badge(v ? '#10b981' : '#94a3b8')}>{v ? 'Hoạt động' : 'Ẩn'}</span> },
+        { key: 'brandId', label: '#', render: (v) => <span style={{ color: '#94a3b8', fontWeight: '600' }}>#{v}</span> },
         {
-            key: '_a', label: 'Thao tác', render: (_, row) => (
+            key: 'brandName', label: 'Tên thương hiệu',
+            render: (v) => <span style={{ fontWeight: '600', color: '#1e293b' }}>{v}</span>
+        },
+        { key: 'slug', label: 'Slug', render: (v) => <span style={{ color: '#64748b', fontFamily: 'monospace', fontSize: '12px' }}>{v}</span> },
+        {
+            key: 'createdAt', label: 'Ngày tạo',
+            render: (v) => <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                {v ? new Date(v).toLocaleDateString('vi-VN') : '—'}
+            </span>
+        },
+        {
+            key: 'isActive', label: 'Trạng thái',
+            render: (v) => <span style={badge(v ? '#10b981' : '#94a3b8')}>{v ? 'Hoạt động' : 'Ẩn'}</span>
+        },
+        {
+            key: '_a', label: 'Thao tác',
+            render: (_, row) => (
                 <div style={{ display: 'flex', gap: '6px' }}>
                     <Btn small variant="secondary" onClick={() => openEdit(row)}>Sửa</Btn>
-                    {row.isActive ? (
-                        <Btn small variant="danger" onClick={() => handleHide(row)}>Ẩn</Btn>
-                    ) : (
-                        <Btn small variant="success" onClick={() => handleReactivate(row)}>Kích hoạt</Btn>
+                    {row.isActive && (
+                        <Btn small variant="danger" onClick={() => handleDelete(row)}>Ẩn</Btn>
+                    )}
+                    {!row.isActive && (
+                        <Btn small variant="success" onClick={() => {
+                            dispatch(updateAdminBrandThunk({
+                                id: row.brandId,
+                                data: { ...row, isActive: true }
+                            })).then(() => {
+                                message.success('Đã kích hoạt lại thương hiệu!')
+                                dispatch(fetchAdminBrandsThunk())
+                            })
+                        }}>Kích hoạt</Btn>
                     )}
                 </div>
             )
@@ -113,38 +127,38 @@ export default function CategoriesPage() {
     return (
         <div>
             <PageHeader
-                title="Quản lý danh mục"
-                subtitle={loading ? 'Đang tải...' : `${items.length} danh mục`}
-                action={<Btn onClick={openAdd}>+ Thêm danh mục</Btn>}
+                title="Quản lý Thương hiệu"
+                subtitle={loading ? 'Đang tải...' : `${items.length} thương hiệu`}
+                action={<Btn onClick={openAdd}>+ Thêm thương hiệu</Btn>}
             />
 
             <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
-                {/* Search */}
+                {/* Search bar */}
                 <div style={{ padding: '14px 16px', borderBottom: '1px solid #f1f5f9' }}>
                     <input
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        placeholder="🔍 Tìm danh mục..."
+                        placeholder="🔍 Tìm thương hiệu..."
                         style={{
                             width: '280px', padding: '8px 12px', border: '1px solid #e2e8f0',
                             borderRadius: '8px', fontSize: '13px', outline: 'none',
                         }}
                     />
                 </div>
-                <Table columns={cols} data={filtered} keyField="categoryId" />
+                <Table columns={cols} data={filtered} keyField="brandId" />
             </div>
 
             {/* ── MODAL THÊM / SỬA ── */}
             <Modal
                 open={!!modal}
-                title={modal === 'add' ? '+ Thêm danh mục' : '✏️ Sửa danh mục'}
+                title={modal === 'add' ? '+ Thêm thương hiệu' : '✏️ Sửa thương hiệu'}
                 onClose={() => setModal(null)}
             >
-                <FormField label="Tên danh mục *">
-                    <Input value={form.categoryName} onChange={f('categoryName')} placeholder="Sneakers, Boots..." />
+                <FormField label="Tên thương hiệu *">
+                    <Input value={form.brandName} onChange={f('brandName')} placeholder="Nike, Adidas, Puma..." />
                 </FormField>
                 <FormField label="Đường dẫn (Slug)">
-                    <Input value={form.slug} onChange={f('slug')} placeholder="sneakers" />
+                    <Input value={form.slug} onChange={f('slug')} placeholder="nike (tự động nếu bỏ trống)" />
                 </FormField>
                 <FormField label="Trạng thái">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -156,24 +170,24 @@ export default function CategoriesPage() {
                 </FormField>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
                     <Btn variant="secondary" onClick={() => setModal(null)}>Hủy</Btn>
-                    <Btn onClick={handleSave}>{modal === 'add' ? 'Tạo danh mục' : 'Lưu thay đổi'}</Btn>
+                    <Btn onClick={handleSave}>{modal === 'add' ? 'Tạo thương hiệu' : 'Lưu thay đổi'}</Btn>
                 </div>
             </Modal>
 
             {/* ── MODAL XÁC NHẬN ẨN ── */}
             <Modal
                 open={!!confirmModal}
-                title="Ẩn danh mục"
+                title="Ẩn thương hiệu"
                 onClose={() => setConfirmModal(null)}
                 width={420}
             >
                 <div style={{ textAlign: 'center', padding: '8px 0 24px' }}>
-                    <div style={{ fontSize: '48px', marginBottom: '12px' }}>📂</div>
+                    <div style={{ fontSize: '48px', marginBottom: '12px' }}>🏷️</div>
                     <p style={{ margin: '0 0 8px', fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>
-                        Ẩn "{confirmModal?.category?.categoryName}"?
+                        Ẩn "{confirmModal?.brand?.brandName}"?
                     </p>
                     <p style={{ margin: '0 0 24px', fontSize: '13px', color: '#64748b', lineHeight: '1.6' }}>
-                        Danh mục sẽ bị ẩn khỏi cửa hàng nhưng vẫn lưu trong hệ thống.<br />
+                        Thương hiệu sẽ bị ẩn khỏi cửa hàng nhưng vẫn lưu trong hệ thống.<br />
                         Bạn có thể kích hoạt lại bất cứ lúc nào.
                     </p>
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
