@@ -358,8 +358,6 @@ export default function MapboxAddressPicker({
     }, [storeLng, storeLat, clearRoute])
 
     // ── Commit selection & fire callback ─────────────────────────────────
-    // Bước 1: dùng Haversine làm giá trị TẠM → UI phản hồi ngay lập tức
-    // Bước 2: sau khi Directions API trả về → cập nhật bằng khoảng cách thực tế
     const commitSelection = useCallback(async (address, lat, lng) => {
         const estimateKm = haversineKm(storeLat, storeLng, lat, lng)
         const estimateFee = calcShippingFee(estimateKm)

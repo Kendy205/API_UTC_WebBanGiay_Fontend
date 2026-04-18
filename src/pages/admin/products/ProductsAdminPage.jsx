@@ -118,6 +118,7 @@ export default function ProductsAdminPage() {
             if (form.imgPublicId) payload.append('ImagePublicId', form.imgPublicId)
         }
 
+        setModal(null)   // Đóng modal ngay, loading hiển thị phía background
         try {
             if (modal === 'add') {
                 await dispatch(createAdminProductThunk(payload)).unwrap()
@@ -127,7 +128,6 @@ export default function ProductsAdminPage() {
                 await dispatch(updateAdminProductThunk({ productId: form.productId, data: payload })).unwrap()
                 message.success('Cập nhật sản phẩm thành công!')
             }
-            setModal(null)
             dispatch(fetchAdminProductsThunk({ page, pageSize }))
         } catch (error) {
             message.error(error || 'Có lỗi xảy ra khi lưu sản phẩm!')

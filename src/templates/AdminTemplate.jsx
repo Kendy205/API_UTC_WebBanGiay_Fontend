@@ -62,11 +62,11 @@ const NAV_GROUPS = [
                 to: '/admin/brands',
                 icon: ['M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z', 'M7 7h.01'],
             },
-            {
-                label: 'Tồn kho',
-                to: '/admin/inventory',
-                icon: ['M5 8h14', 'M5 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M19 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M5 8v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8', 'M10 12h4'],
-            },
+            // {
+            //     label: 'Tồn kho',
+            //     to: '/admin/inventory',
+            //     icon: ['M5 8h14', 'M5 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M19 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'M5 8v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8', 'M10 12h4'],
+            // },
             // {
             //     label: 'Khuyến mãi',
             //     to: '/admin/promotions',

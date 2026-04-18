@@ -28,7 +28,7 @@ export default function BrandsPage() {
 
     const handleSave = async () => {
         if (!form.brandName?.trim()) return message.warning('Vui lòng nhập tên thương hiệu!')
-
+        setModal(null)   // Đóng modal ngay, loading hiển thị phía background
         try {
             const payload = {
                 brandId: form.brandId || 0,
@@ -45,7 +45,6 @@ export default function BrandsPage() {
                 await dispatch(updateAdminBrandThunk({ id: form.brandId, data: payload })).unwrap()
                 message.success('Cập nhật thương hiệu thành công!')
             }
-            setModal(null)
             dispatch(fetchAdminBrandsThunk())
         } catch (error) {
             message.error(error || 'Lỗi khi lưu thương hiệu')

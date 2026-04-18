@@ -27,6 +27,7 @@ export default function CategoriesPage() {
 
     const handleSave = async () => {
         if (!form.categoryName?.trim()) return message.warning('Vui lòng nhập tên danh mục!')
+        setModal(null)   // Đóng modal ngay, loading hiển thị phía background
         try {
             const payload = {
                 categoryId: form.categoryId || 0,
@@ -41,7 +42,6 @@ export default function CategoriesPage() {
                 await dispatch(updateAdminCategoryThunk({ id: form.categoryId, data: payload })).unwrap()
                 message.success('Cập nhật danh mục thành công!')
             }
-            setModal(null)
             dispatch(fetchAdminCategoriesThunk())
         } catch (error) {
             message.error(error || 'Lỗi khi lưu danh mục')
