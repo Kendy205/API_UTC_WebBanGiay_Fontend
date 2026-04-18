@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { message } from 'antd'
-import { PageHeader, Table, SearchBar, badge, STATUS_COLOR, fmt, fmtDate, Modal, Btn } from '../adminShared'
+import { PageHeader, Table, SearchBar, FilterSelect, badge, STATUS_COLOR, fmt, fmtDate, Modal, Btn } from '../adminShared'
 import Pagination from '../../../components/common/Pagination'
 import { fetchAdminOrdersThunk, updateAdminOrderStatusThunk, fetchAdminOrderByIdThunk } from '../../../redux/actions/admin/adminOrderAdminAction'
 import { clearSelectedOrder } from '../../../redux/slices/admin/adminOrderAdminSlice'
@@ -67,13 +67,11 @@ export default function OrdersAdminPage() {
         {
             key: '_a', label: 'Cập nhật', render: (_, row) => (
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <select
+                    <FilterSelect
                         value={row.status}
-                        onChange={(e) => handleStatus(row, e.target.value)}
-                        style={{ padding: '5px 8px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', background: '#f8fafc', cursor: 'pointer' }}
-                    >
-                        {ORDER_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                        onChange={(v) => handleStatus(row, v)}
+                        options={ORDER_STATUSES.map((s) => ({ value: s, label: s }))}
+                    />
                     <Btn small variant="secondary" onClick={() => handleViewDetail(row.id)}>Chi tiết</Btn>
                 </div>
             )

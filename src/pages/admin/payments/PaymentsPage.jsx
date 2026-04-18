@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { PageHeader, Table, SearchBar, badge, fmt, fmtDate } from '../adminShared'
+import { PageHeader, Table, SearchBar, FilterSelect, badge, fmt, fmtDate } from '../adminShared'
 import Pagination from '../../../components/common/Pagination'
 import { fetchAdminPaymentsThunk } from '../../../redux/actions/admin/adminPaymentAction'
 
@@ -92,26 +92,24 @@ export default function PaymentsPage() {
 
             <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
                 {/* Filters */}
-                <div style={{ padding: '14px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ padding: '14px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <SearchBar
                         value={search}
                         onChange={setSearch}
                         placeholder="Tìm khách / mã đơn / mã thanh toán..."
                     />
-                    <select
+                    <FilterSelect
                         value={filterStatus}
-                        onChange={e => { setFilterStatus(e.target.value); setCurrentPage(1) }}
-                        style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', background: '#fff', outline: 'none' }}
-                    >
-                        {STATUSES.map(s => <option key={s} value={s}>{s || 'Tất cả trạng thái'}</option>)}
-                    </select>
-                    <select
+                        onChange={(v) => { setFilterStatus(v); setCurrentPage(1) }}
+                        placeholder="Tất cả trạng thái"
+                        options={STATUSES.filter(Boolean).map(s => ({ value: s, label: s }))}
+                    />
+                    <FilterSelect
                         value={filterMethod}
-                        onChange={e => { setFilterMethod(e.target.value); setCurrentPage(1) }}
-                        style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', background: '#fff', outline: 'none' }}
-                    >
-                        {METHODS.map(m => <option key={m} value={m}>{m || 'Tất cả phương thức'}</option>)}
-                    </select>
+                        onChange={(v) => { setFilterMethod(v); setCurrentPage(1) }}
+                        placeholder="Tất cả phương thức"
+                        options={METHODS.filter(Boolean).map(m => ({ value: m, label: m }))}
+                    />
                 </div>
 
                 <Table columns={cols} data={filtered} />

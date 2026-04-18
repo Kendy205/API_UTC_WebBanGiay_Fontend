@@ -93,7 +93,11 @@ export default function OrderPage() {
     const shippingFee = addressTab === TAB_MAP && mapAddress?.shippingFee != null
         ? mapAddress.shippingFee
         : 30000
+    const isShippingEstimated = addressTab === TAB_SAVED
     const finalTotal = totalItemPrice + shippingFee
+
+    // Địa chỉ đã lưu đang được chọn (dùng để preview)
+    const selectedAddress = addresses.find((a) => a.addressId === selectedAddressId)
 
     // Kiểm tra địa chỉ hợp lệ dựa theo tab đang chọn
     const isAddressReady =
@@ -441,6 +445,9 @@ export default function OrderPage() {
                                     {addressTab === TAB_MAP && mapAddress?.distanceKm != null && (
                                         <div className="text-xs text-neutral-400 mt-0.5">📏 {mapAddress.distanceKm} km</div>
                                     )}
+                                    {isShippingEstimated && (
+                                        <div className="text-xs text-amber-500 mt-0.5">⚠️ Ước tính</div>
+                                    )}
                                 </div>
                             </div>
                             <div className="flex justify-between border-t border-neutral-100 pt-2 mt-2 text-base">
@@ -456,6 +463,20 @@ export default function OrderPage() {
                                 {mapAddress.distanceKm != null && (
                                     <div className="text-green-700 font-medium">📏 {mapAddress.distanceKm} km — 🚚 {formatPrice(mapAddress.shippingFee)}</div>
                                 )}
+                            </div>
+                        )}
+                        {addressTab === TAB_SAVED && selectedAddress && (
+                            <div className="mt-3 rounded-lg bg-neutral-50 px-3 py-2 text-xs text-neutral-600 space-y-1">
+                                <div>
+                                    <span className="font-medium">📍 Giao đến: </span>
+                                    <span className="font-semibold text-neutral-800">{selectedAddress.recipientName}</span>
+                                    {selectedAddress.phone && <span> • {selectedAddress.phone}</span>}
+                                </div>
+                                <div className="text-neutral-500">
+                                    {[selectedAddress.streetAddress, selectedAddress.ward, selectedAddress.district, selectedAddress.province]
+                                        .filter(Boolean).join(', ')}
+                                </div>
+                                <div className="text-amber-600 font-medium">⚠️ Phí vận chuyển sẽ được xác nhận khi giao hàng</div>
                             </div>
                         )}
 

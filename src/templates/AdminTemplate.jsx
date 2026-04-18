@@ -4,6 +4,7 @@ import { logout } from '../redux/slices/authSlice'
 import LoadingLink from '../components/loading/LoadingLink'
 import { navigateWithRouteLoading } from '../utils/route/navigateWithRouteLoading'
 import { useState } from 'react'
+import { AdminSharedStyles } from '../pages/admin/adminShared'
 
 /* ─── Icons (inline SVG helpers) ─────────────────────────────────────────── */
 const Icon = ({ d, size = 20, viewBox = '0 0 24 24' }) => (
@@ -572,6 +573,9 @@ export default function AdminTemplate() {
 
     return (
         <>
+            {/* Global shared admin styles */}
+            <AdminSharedStyles />
+
             {/* Global style for hover effects */}
             <style>{`
                 .admin-nav-item:hover {
