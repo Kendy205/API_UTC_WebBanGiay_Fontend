@@ -147,7 +147,7 @@ export default function OrderPage() {
 
             if (newOrderId) {
                 dispatch(payVnpayThunk(newOrderId))
-                // Sau lệnh này trình duyệt sẽ redirect, không cần làm gì thêm
+                // Sau lệnh này trình duyệt sẽ redirect
             } else {
                 // Không lấy được orderId — vẫn hiển thị trang thành công thường
                 // (UI sẽ hiển thị do orderSuccess = true)
@@ -158,7 +158,7 @@ export default function OrderPage() {
     /* ── Đặt hàng thành công ── */
     if (orderSuccess) {
         const fmt = formatPrice
-
+        console.log(createdOrder)
         const STATUS_MAP = {
             Pending: { label: 'Chờ xác nhận', color: 'bg-amber-100 text-amber-700 border-amber-200' },
             Processing: { label: 'Đang xử lý', color: 'bg-blue-100 text-blue-700 border-blue-200' },
@@ -214,36 +214,78 @@ export default function OrderPage() {
 
                     {/* Danh sách sản phẩm */}
                     <div className="px-5 py-4">
-                        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Sản phẩm</p>
-                        <div className="space-y-3">
-                            {orderItems.map((it, idx) => (
-                                <div key={it.orderItemId ?? it.variantId ?? idx}
-                                    className="flex items-center justify-between gap-3 text-sm">
-                                    <div className="min-w-0 flex-1">
-                                        <p className="truncate font-medium text-slate-800">
-                                            {it.productName ?? it.name ?? `Sản phẩm #${idx + 1}`}
-                                        </p>
-                                        {(it.colorName || it.sizeLabel || it.sizeName) && (
-                                            <p className="text-xs text-slate-400">
-                                                {[it.colorName, it.sizeLabel ?? it.sizeName].filter(Boolean).join(' · ')}
+                        <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">Chi tiết sản phẩm</p>
+                        <div className="space-y-4">
+                            {orderItems.map((it, idx) => {
+                                const img = it.imageUrlSnapshot || it.image || it.imageUrl || null
+                                const name = it.productNameSnapshot || it.productName || it.name || `Sản phẩm #${idx + 1}`
+                                const color = it.colorNameSnapshot || it.colorName
+                                const size = it.sizeLabelSnapshot || it.sizeLabel || it.sizeName
+                                const price = it.unitPrice ?? it.price
+
+                                return (
+                                    <div key={it.orderItemId ?? it.variantId ?? idx}
+                                        className="group flex items-center gap-4 rounded-xl border border-transparent p-1 transition-all hover:bg-slate-50 hover:border-slate-100">
+
+                                        {/* Ảnh sản phẩm */}
+                                        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
+                                            {img ? (
+                                                <img
+                                                    src={img}
+                                                    alt={name}
+                                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-xs text-slate-300">No Image</div>
+                                            )}
+                                        </div>
+
+                                        {/* Thông tin chữ */}
+                                        <div className="min-w-0 flex-1">
+                                            <p className="line-clamp-1 font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">
+                                                {name}
                                             </p>
-                                        )}
+                                            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                                                {color && (
+                                                    <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
+                                                        🎨 {color}
+                                                    </span>
+                                                )}
+                                                {size && (
+                                                    <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 font-medium text-indigo-600">
+                                                        📏 Size: {size}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Giá & Số lượng */}
+                                        <div className="shrink-0 text-right">
+                                            <p className="font-bold text-slate-900">×{it.quantity}</p>
+                                            {fmt(price) && (
+                                                <p className="text-xs font-medium text-slate-400 line-through decoration-slate-300 decoration-1 opacity-60">{fmt(price)}</p>
+                                            )}
+                                            {fmt((price || 0) * it.quantity) && (
+                                                <p className="text-sm font-bold text-indigo-500">{fmt((price || 0) * it.quantity)}</p>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="shrink-0 text-right">
-                                        <p className="font-semibold text-slate-700">×{it.quantity}</p>
-                                        {fmt(it.unitPrice ?? it.price) && (
-                                            <p className="text-xs text-slate-400">{fmt(it.unitPrice ?? it.price)}</p>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
 
                         {/* Tổng tiền */}
                         {totalAmount != null && (
-                            <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                                <span className="text-sm font-semibold text-slate-600">Tổng cộng</span>
-                                <span className="text-lg font-extrabold text-indigo-600">{fmt(totalAmount)}</span>
+                            <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
+                                <div>
+                                    <span className="text-sm font-medium text-slate-500">Tổng thanh toán</span>
+                                    <p className="text-xs text-slate-400 mt-0.5">(Đã bao gồm phí vận chuyển và giảm giá)</p>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-2xl font-black tracking-tight text-indigo-600">
+                                        {fmt(totalAmount)}
+                                    </span>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -252,23 +294,23 @@ export default function OrderPage() {
                 {/* ─ Điều hướng ─ */}
                 <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <button
-                        onClick={() => { dispatch(resetOrderState()); navigate('/order-history') }}
+                        onClick={() => navigate('/order-history')}
                         className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 shadow-sm"
                     >
                         📋 Xem lịch sử đơn hàng
                     </button>
                     <button
-                        onClick={() => { dispatch(resetOrderState()); navigate('/') }}
+                        onClick={() => navigate('/')}
                         className="flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                     >
                         🏠 Về trang chủ
                     </button>
-                    <button
+                    {/* <button
                         onClick={() => { dispatch(resetOrderState()); navigate('/home') }}
                         className="flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:col-span-2"
                     >
                         🛍️ Tiếp tục mua sắm
-                    </button>
+                    </button> */}
                 </div>
 
             </div>

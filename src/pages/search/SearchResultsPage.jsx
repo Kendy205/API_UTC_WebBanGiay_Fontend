@@ -15,13 +15,13 @@ const SORT_OPTIONS = [
     { value: 'nameAsc', label: 'Tên: A – Z' },
 ]
 
-function sortProducts(products, option) {
-    const arr = [...products]
-    if (option === 'priceAsc') return arr.sort((a, b) => (a.salePrice ?? a.basePrice ?? 0) - (b.salePrice ?? b.basePrice ?? 0))
-    if (option === 'priceDesc') return arr.sort((a, b) => (b.salePrice ?? b.basePrice ?? 0) - (a.salePrice ?? a.basePrice ?? 0))
-    if (option === 'nameAsc') return arr.sort((a, b) => (a.productName ?? '').localeCompare(b.productName ?? ''))
-    return arr
-}
+// function sortProducts(products, option) {
+//     const arr = [...products]
+//     if (option === 'priceAsc') return arr.sort((a, b) => (a.salePrice ?? a.basePrice ?? 0) - (b.salePrice ?? b.basePrice ?? 0))
+//     if (option === 'priceDesc') return arr.sort((a, b) => (b.salePrice ?? b.basePrice ?? 0) - (a.salePrice ?? a.basePrice ?? 0))
+//     if (option === 'nameAsc') return arr.sort((a, b) => (a.productName ?? '').localeCompare(b.productName ?? ''))
+//     return arr
+// }
 
 export default function SearchResultsPage() {
     const dispatch = useDispatch()
