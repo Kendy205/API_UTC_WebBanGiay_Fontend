@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
-// ── Haversine distance (km) ─────────────────────────────────────────────────
+// ── Haversine distance (km) — dùng làm fallback / ước tính tạm ────────────
 function haversineKm(lat1, lng1, lat2, lng2) {
     const R = 6371
     const dLat = ((lat2 - lat1) * Math.PI) / 180
@@ -294,10 +294,10 @@ export default function MapboxAddressPicker({
         if (map.getSource('route')) map.removeSource('route')
     }, [])
 
-    // ── Gọi Mapbox Directions API → vẽ tuyến đường thực tế ──────────────
+    // ── Gọi Mapbox Directions API → vẽ tuyến đường thực tế + trả về khoảng cách ──
     const drawRoute = useCallback(async (toLng, toLat) => {
         const map = mapRef.current
-        if (!map) return
+        if (!map) return null
 
         setRouteLoading(true)
         clearRoute()
@@ -311,17 +311,14 @@ export default function MapboxAddressPicker({
             const res = await fetch(url)
             const json = await res.json()
             const route = json.routes?.[0]
-            if (!route) return
+            if (!route) return null
 
-            const geojson = {
-                type: 'Feature',
-                geometry: route.geometry,
-            }
+            // ── Khoảng cách đường thực tế (meters → km) ──────────────────
+            const realKm = +(route.distance / 1000).toFixed(2)
 
-            // Xóa layer cũ (nếu có) trước khi thêm mới
+            const geojson = { type: 'Feature', geometry: route.geometry }
+
             clearRoute()
-
-            // Viền trắng phía dưới để đường nổi bật hơn
             map.addSource('route', { type: 'geojson', data: geojson })
 
             map.addLayer({
@@ -329,14 +326,9 @@ export default function MapboxAddressPicker({
                 type: 'line',
                 source: 'route',
                 layout: { 'line-join': 'round', 'line-cap': 'round' },
-                paint: {
-                    'line-color': '#ffffff',
-                    'line-width': 8,
-                    'line-opacity': 0.8,
-                },
+                paint: { 'line-color': '#ffffff', 'line-width': 8, 'line-opacity': 0.8 },
             })
 
-            // Đường màu xanh chính
             map.addLayer({
                 id: 'route-line',
                 type: 'line',
@@ -346,11 +338,9 @@ export default function MapboxAddressPicker({
                     'line-color': '#3b82f6',
                     'line-width': 5,
                     'line-opacity': 0.92,
-                    'line-dasharray': [0, 0], // solid line
                 },
             })
 
-            // Fit camera vừa cả 2 điểm
             const coords = route.geometry.coordinates
             const lngs = coords.map((c) => c[0])
             const lats = coords.map((c) => c[1])
@@ -358,25 +348,36 @@ export default function MapboxAddressPicker({
                 [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
                 { padding: { top: 60, bottom: 60, left: 40, right: 40 }, speed: 1.2 }
             )
+
+            return realKm  // ← trả về khoảng cách đường thực tế
         } catch {
-            // Lỗi API → bỏ qua, không ảnh hưởng chức năng chọn địa chỉ
+            return null    // ← lỗi → fallback dùng Haversine
         } finally {
             setRouteLoading(false)
         }
     }, [storeLng, storeLat, clearRoute])
 
     // ── Commit selection & fire callback ─────────────────────────────────
-    const commitSelection = useCallback((address, lat, lng) => {
-        const distanceKm = haversineKm(storeLat, storeLng, lat, lng)
-        const shippingFee = calcShippingFee(distanceKm)
+    // Bước 1: dùng Haversine làm giá trị TẠM → UI phản hồi ngay lập tức
+    // Bước 2: sau khi Directions API trả về → cập nhật bằng khoảng cách thực tế
+    const commitSelection = useCallback(async (address, lat, lng) => {
+        const estimateKm = haversineKm(storeLat, storeLng, lat, lng)
+        const estimateFee = calcShippingFee(estimateKm)
 
-        const info = { address, lat, lng, distanceKm: +distanceKm.toFixed(2), shippingFee }
-        setSelectedInfo(info)
+        const tempInfo = { address, lat, lng, distanceKm: +estimateKm.toFixed(2), shippingFee: estimateFee, isEstimate: true }
+        setSelectedInfo(tempInfo)
         setSearchText(address)
-        onAddressSelected?.(info)
+        onAddressSelected?.(tempInfo)
 
-        // Vẽ tuyến đường thực tế trên bản đồ
-        drawRoute(lng, lat)
+        // Gọi Directions API → nhận khoảng cách đường thực tế
+        const realKm = await drawRoute(lng, lat)
+
+        if (realKm != null) {
+            const realFee = calcShippingFee(realKm)
+            const realInfo = { address, lat, lng, distanceKm: realKm, shippingFee: realFee, isEstimate: false }
+            setSelectedInfo(realInfo)
+            onAddressSelected?.(realInfo)  // cập nhật lại OrderPage với giá trị chính xác
+        }
     }, [storeLat, storeLng, onAddressSelected, drawRoute])
 
     // ── Fly map to position ───────────────────────────────────────────────
@@ -551,17 +552,30 @@ export default function MapboxAddressPicker({
             {selectedInfo && (
                 <div style={S.infoBar}>
                     <div style={S.infoText}>
-                        <div style={{ fontWeight: 600, marginBottom: '4px', color: '#064e3b' }}>
+                        <div style={{ fontWeight: 600, marginBottom: '4px', color: '#064e3b', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             ✅ Địa chỉ đã chọn
+                            {!selectedInfo.isEstimate && (
+                                <span style={{ fontSize: '10px', background: '#d1fae5', color: '#065f46', borderRadius: '4px', padding: '1px 6px', fontWeight: 500 }}>
+                                    🛣️ Đường thực tế
+                                </span>
+                            )}
                         </div>
                         <div>{selectedInfo.address}</div>
-                        <div style={{ marginTop: '6px', fontSize: '12px', color: '#047857' }}>
-                            📏 Khoảng cách: <b>{selectedInfo.distanceKm} km</b> từ cửa hàng
+                        <div style={{ marginTop: '6px', fontSize: '12px', color: '#047857', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            📏 Khoảng cách:{' '}
+                            {routeLoading ? (
+                                <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Đang tính...</span>
+                            ) : (
+                                <b>{selectedInfo.distanceKm} km</b>
+                            )}
+                            {selectedInfo.isEstimate && !routeLoading && (
+                                <span style={{ fontSize: '10px', color: '#9ca3af' }}>(ước tính)</span>
+                            )}
                         </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
-                        <div style={S.badge(feeColor)}>
-                            🚚 {fmt(selectedInfo.shippingFee)}
+                        <div style={S.badge(routeLoading ? '#9ca3af' : feeColor)}>
+                            {routeLoading ? '⏳ Đang tính...' : `🚚 ${fmt(selectedInfo.shippingFee)}`}
                         </div>
                         <div style={{ fontSize: '11px', color: '#6b7280' }}>Phí vận chuyển</div>
                     </div>
